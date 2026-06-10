@@ -518,27 +518,70 @@ let VIEW='fixture', selGroup='A', adminPhase='A';
 let adminOk=false, loggedPid=null;
 
 // ══════════════════════════════════════════════
-// STORAGE
+// STORAGE — con protección contra race conditions
 // ══════════════════════════════════════════════
+
+// Flag: bloquea syncRead automático mientras hay escrituras pendientes
+let _isSaving = false;
+let _saveCount = 0; // contador de guardados pendientes
+
 async function syncRead(){
+  // NO leer del servidor si hay guardados en curso — evita sobreescribir datos locales
+  if(_isSaving){ setSS('ing','↑ Guardando...'); return; }
   if(!SCRIPT_READY){ loadLocal(); setSS('err','⚠ Modo local'); return; }
   try{
     const r=await fetch(SCRIPT_URL+'?action=read&t='+Date.now());
-    DB={...DB,...await r.json()};
-    saveLocal(); setSS('ok','✓ Sincronizado');
+    const remoteData = await r.json();
+    // Merge inteligente: el local SIEMPRE gana sobre el remoto para results y predictions
+    // Esto evita que un sync sobreescriba lo que acabas de ingresar
+    if(remoteData.predictions) {
+      // Merge predicciones: local tiene prioridad
+      Object.entries(remoteData.predictions).forEach(([pid, preds])=>{
+        if(!DB.predictions[pid]) DB.predictions[pid] = preds;
+        else {
+          Object.entries(preds).forEach(([mid, val])=>{
+            if(!DB.predictions[pid][mid]) DB.predictions[pid][mid] = val;
+          });
+        }
+      });
+    }
+    if(remoteData.results) {
+      // Merge resultados: local tiene prioridad (no sobreescribir lo recién ingresado)
+      Object.entries(remoteData.results).forEach(([mid, val])=>{
+        if(DB.results[mid] === undefined) DB.results[mid] = val;
+      });
+    }
+    if(remoteData.deadline && !DB.deadline) DB.deadline = remoteData.deadline;
+    else if(remoteData.deadline) DB.deadline = remoteData.deadline;
+    saveLocal();
+    setSS('ok','✓ Sincronizado');
   }catch(e){ loadLocal(); setSS('err','⚠ Sin conexión'); }
 }
+
 async function syncWrite(p){
   saveLocal();
   if(!SCRIPT_READY){ setSS('err','⚠ Modo local'); return; }
+  _isSaving = true;
+  _saveCount++;
+  const myCount = _saveCount;
   try{
     setSS('ing','↑ Guardando...');
     await fetch(SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p),mode:'no-cors'});
-    setTimeout(()=>syncRead().then(render),1800);
-  }catch(e){ setSS('err','⚠ Error'); }
+    // Esperar más tiempo para que Apps Script procese antes de releer
+    await new Promise(res => setTimeout(res, 3500));
+    // Solo liberar si no hay otros guardados posteriores en cola
+    if(myCount === _saveCount){
+      _isSaving = false;
+      setSS('ok','✓ Guardado');
+    }
+  }catch(e){
+    _isSaving = false;
+    setSS('err','⚠ Error al guardar');
+  }
 }
+
 function saveLocal(){ try{localStorage.setItem('polla26v2',JSON.stringify(DB));}catch(e){} }
-function loadLocal(){ try{const s=localStorage.getItem('polla26v2');if(s)DB={...DB,...JSON.parse(s)};}catch(e){} }
+function loadLocal(){ try{const s=localStorage.getItem('polla26v2');if(s){ const d=JSON.parse(s); DB.predictions=d.predictions||{}; DB.results=d.results||{}; DB.deadline=d.deadline||DB.deadline; }}catch(e){} }
 function setSS(t,m){
   const el=document.getElementById('syncStatus'); if(!el)return;
   const c={ok:'s-ok',err:'s-err',ing:'s-ing'};
@@ -914,7 +957,7 @@ function vAdmin(){
           <input type="number" min="0" max="20" value="${res!=null?res.a:''}" placeholder="—" id="aa_${m.id}">
         </div>
         <div class="flex gap-2 mt-2 justify-center">
-          <button class="btn btn-green btn-sm" onclick="doSaveRes(${m.id})">💾</button>
+          <button class="btn btn-green btn-sm" id="savebtn_${m.id}" onclick="doSaveRes(${m.id})">💾 Guardar</button>
           ${res!=null?`<button class="btn btn-red btn-sm" onclick="doClearRes(${m.id})">🗑️</button>`:''}
         </div>
       </div>
@@ -1008,15 +1051,33 @@ function setPred(mid,side,val){
   },1200);
 }
 function doSaveRes(mid){
-  const h=parseInt(document.getElementById('ah_'+mid)?.value);
-  const a=parseInt(document.getElementById('aa_'+mid)?.value);
-  if(isNaN(h)||isNaN(a)){alert('Ingresa ambos marcadores');return;}
+  const hEl=document.getElementById('ah_'+mid);
+  const aEl=document.getElementById('aa_'+mid);
+  const h=parseInt(hEl?.value);
+  const a=parseInt(aEl?.value);
+  if(isNaN(h)||isNaN(a)){alert('⚠️ Ingresa ambos marcadores (local y visitante)');return;}
+  // Guardar en estado local inmediatamente
   DB.results[mid]={h,a};
-  syncWrite({action:'saveResult',mid,h,a});
-  render();
+  saveLocal();
+  // Mostrar confirmación visual en el botón sin hacer render() completo
+  const btn=document.getElementById('savebtn_'+mid);
+  if(btn){ btn.textContent='✅'; btn.style.background='#2ea043'; btn.disabled=true;
+    setTimeout(()=>{ if(btn){ btn.textContent='💾 Guardar'; btn.style.background=''; btn.disabled=false; } }, 3000);
+  }
+  // Marcar inputs en verde para confirmación visual
+  if(hEl){ hEl.style.borderColor='#2ea043'; setTimeout(()=>{if(hEl)hEl.style.borderColor='';},3000); }
+  if(aEl){ aEl.style.borderColor='#2ea043'; setTimeout(()=>{if(aEl)aEl.style.borderColor='';},3000); }
+  // Enviar al servidor en background SIN hacer render()
+  syncWrite({action:'saveResult',mid,h,a}).then(()=>{
+    // Solo re-render después de confirmar guardado, sin interrumpir inputs activos
+    const activeEl = document.activeElement;
+    if(!activeEl || !activeEl.type || activeEl.type !== 'number') render();
+  });
 }
 function doClearRes(mid){
+  if(!confirm('¿Eliminar este resultado?')) return;
   delete DB.results[mid];
+  saveLocal();
   syncWrite({action:'clearResult',mid});
   render();
 }
@@ -1049,7 +1110,15 @@ function printPolla(pid){
 async function init(){
   await syncRead();
   render();
-  setInterval(async()=>{await syncRead();render();},60000);
+  // Auto-sync cada 90 segundos, pero solo si no hay guardados en curso
+  setInterval(async()=>{
+    if(!_isSaving){
+      await syncRead();
+      // Solo re-render si no hay inputs activos (admin ingresando datos)
+      const activeEl = document.activeElement;
+      if(!activeEl || !activeEl.type || activeEl.type !== 'number') render();
+    }
+  }, 90000);
 }
 init();
 </script>
