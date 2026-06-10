@@ -511,10 +511,67 @@ const GROUPS = {
 };
 
 // ══════════════════════════════════════════════
+// ALL_MATCHES — todos los partidos (grupos + KO)
+// ══════════════════════════════════════════════
+// Construir desde GROUPS (fase de grupos)
+const ALL_MATCHES = [];
+Object.values(GROUPS).forEach(g => g.matches.forEach(m => ALL_MATCHES.push(m)));
+
+// Agregar partidos KO (Dieciseisavos → Final)
+// Los equipos se completan por el admin cuando clasifiquen
+const KO_MATCHES_DEF = [
+  // Dieciseisavos
+  {id:73,jor:'',phase:'dieciseisavos',home:'2A',hf:'',away:'2B',af:'',dt:'28/06 21:00'},
+  {id:74,jor:'',phase:'dieciseisavos',home:'1E',hf:'',away:'3ABCDF',af:'',dt:'29/06 19:00'},
+  {id:75,jor:'',phase:'dieciseisavos',home:'1F',hf:'',away:'2C',af:'',dt:'29/06 22:30'},
+  {id:76,jor:'',phase:'dieciseisavos',home:'1C',hf:'',away:'2F',af:'',dt:'29/06 19:00'},
+  {id:77,jor:'',phase:'dieciseisavos',home:'2E',hf:'',away:'2I',af:'',dt:'30/06 19:00'},
+  {id:78,jor:'',phase:'dieciseisavos',home:'1I',hf:'',away:'3CDFGH',af:'',dt:'30/06 23:00'},
+  {id:79,jor:'',phase:'dieciseisavos',home:'1A',hf:'',away:'3CEFHI',af:'',dt:'01/07 03:00'},
+  {id:80,jor:'',phase:'dieciseisavos',home:'1L',hf:'',away:'3EHIJK',af:'',dt:'01/07 18:00'},
+  {id:81,jor:'',phase:'dieciseisavos',home:'1G',hf:'',away:'3AEHIJ',af:'',dt:'01/07 22:00'},
+  {id:82,jor:'',phase:'dieciseisavos',home:'1D',hf:'',away:'3BEFIJ',af:'',dt:'02/07 02:00'},
+  {id:83,jor:'',phase:'dieciseisavos',home:'2K',hf:'',away:'2L',af:'',dt:'02/07 21:00'},
+  {id:84,jor:'',phase:'dieciseisavos',home:'1H',hf:'',away:'2J',af:'',dt:'03/07 01:00'},
+  {id:85,jor:'',phase:'dieciseisavos',home:'1B',hf:'',away:'3EFGIJ',af:'',dt:'03/07 05:00'},
+  {id:86,jor:'',phase:'dieciseisavos',home:'1J',hf:'',away:'2H',af:'',dt:'04/07 00:00'},
+  {id:87,jor:'',phase:'dieciseisavos',home:'1K',hf:'',away:'3DEIJL',af:'',dt:'04/07 03:30'},
+  {id:88,jor:'',phase:'dieciseisavos',home:'2D',hf:'',away:'2G',af:'',dt:'03/07 20:00'},
+  // Octavos
+  {id:89,jor:'',phase:'octavos',home:'W74',hf:'',away:'W77',af:'',dt:'04/07 19:00'},
+  {id:90,jor:'',phase:'octavos',home:'W73',hf:'',away:'W75',af:'',dt:'04/07 23:00'},
+  {id:91,jor:'',phase:'octavos',home:'W76',hf:'',away:'W78',af:'',dt:'05/07 22:00'},
+  {id:92,jor:'',phase:'octavos',home:'W79',hf:'',away:'W80',af:'',dt:'06/07 02:00'},
+  {id:93,jor:'',phase:'octavos',home:'W83',hf:'',away:'W84',af:'',dt:'06/07 21:00'},
+  {id:94,jor:'',phase:'octavos',home:'W81',hf:'',away:'W82',af:'',dt:'07/07 02:00'},
+  {id:95,jor:'',phase:'octavos',home:'W86',hf:'',away:'W88',af:'',dt:'07/07 18:00'},
+  {id:96,jor:'',phase:'octavos',home:'W85',hf:'',away:'W87',af:'',dt:'07/07 22:00'},
+  // Cuartos
+  {id:97, jor:'',phase:'cuartos',home:'W89',hf:'',away:'W90',af:'',dt:'09/07 22:00'},
+  {id:98, jor:'',phase:'cuartos',home:'W93',hf:'',away:'W94',af:'',dt:'10/07 21:00'},
+  {id:99, jor:'',phase:'cuartos',home:'W91',hf:'',away:'W92',af:'',dt:'11/07 23:00'},
+  {id:100,jor:'',phase:'cuartos',home:'W95',hf:'',away:'W96',af:'',dt:'12/07 03:00'},
+  // Semifinales
+  {id:101,jor:'',phase:'semifinales',home:'W97',hf:'',away:'W98',af:'',dt:'14/07 21:00'},
+  {id:102,jor:'',phase:'semifinales',home:'W99',hf:'',away:'W100',af:'',dt:'15/07 21:00'},
+  // Tercer lugar
+  {id:103,jor:'',phase:'tercero',home:'L101',hf:'',away:'L102',af:'',dt:'18/07 23:00'},
+  // Final
+  {id:104,jor:'',phase:'final',home:'W101',hf:'',away:'W102',af:'',dt:'19/07 21:00'},
+];
+KO_MATCHES_DEF.forEach(m => ALL_MATCHES.push(m));
+
+// ══════════════════════════════════════════════
 // STATE
 // ══════════════════════════════════════════════
-let DB = {predictions:{}, results:{}, deadline:'2026-06-10T23:59:00'};
-let VIEW='fixture', selGroup='A', adminPhase='A';
+let DB = {
+  predictions:{},
+  results:{},
+  deadline:'2026-06-10T23:59:00',
+  phaseDeadlines:{},   // { phaseKey: ISO datetime string }
+  phaseTeams:{}        // { matchId: {home:'TeamA', hf:'🇦🇷', away:'TeamB', af:'🇧🇷'} }
+};
+let VIEW='fixture', selGroup='A', adminPhase='A', selKOPhase=null;
 let adminOk=false, loggedPid=null;
 
 // ══════════════════════════════════════════════
@@ -551,8 +608,16 @@ async function syncRead(){
         if(DB.results[mid] === undefined) DB.results[mid] = val;
       });
     }
-    if(remoteData.deadline && !DB.deadline) DB.deadline = remoteData.deadline;
-    else if(remoteData.deadline) DB.deadline = remoteData.deadline;
+    if(remoteData.deadline) DB.deadline = remoteData.deadline;
+    if(remoteData.phaseDeadlines) DB.phaseDeadlines = {...DB.phaseDeadlines, ...remoteData.phaseDeadlines};
+    if(remoteData.phaseTeams) {
+      DB.phaseTeams = {...DB.phaseTeams, ...remoteData.phaseTeams};
+      // Apply team names to matches
+      Object.entries(DB.phaseTeams).forEach(([mid,t])=>{
+        const match=ALL_MATCHES.find(x=>x.id===+mid);
+        if(match){ match.home=t.home; match.hf=t.hf||''; match.away=t.away; match.af=t.af||''; }
+      });
+    }
     saveLocal();
     setSS('ok','✓ Sincronizado');
   }catch(e){ loadLocal(); setSS('err','⚠ Sin conexión'); }
@@ -581,7 +646,24 @@ async function syncWrite(p){
 }
 
 function saveLocal(){ try{localStorage.setItem('polla26v2',JSON.stringify(DB));}catch(e){} }
-function loadLocal(){ try{const s=localStorage.getItem('polla26v2');if(s){ const d=JSON.parse(s); DB.predictions=d.predictions||{}; DB.results=d.results||{}; DB.deadline=d.deadline||DB.deadline; }}catch(e){} }
+function loadLocal(){
+  try{
+    const s=localStorage.getItem('polla26v2');
+    if(s){
+      const d=JSON.parse(s);
+      DB.predictions=d.predictions||{};
+      DB.results=d.results||{};
+      DB.deadline=d.deadline||DB.deadline;
+      DB.phaseDeadlines=d.phaseDeadlines||{};
+      DB.phaseTeams=d.phaseTeams||{};
+      // Apply saved team names to ALL_MATCHES
+      Object.entries(DB.phaseTeams).forEach(([mid,t])=>{
+        const match=ALL_MATCHES.find(x=>x.id===+mid);
+        if(match){ match.home=t.home; match.hf=t.hf||''; match.away=t.away; match.af=t.af||''; }
+      });
+    }
+  }catch(e){}
+}
 function setSS(t,m){
   const el=document.getElementById('syncStatus'); if(!el)return;
   const c={ok:'s-ok',err:'s-err',ing:'s-ing'};
@@ -592,22 +674,71 @@ function setSS(t,m){
 // SCORING
 // ══════════════════════════════════════════════
 function wnr(h,a){return h>a?'H':a>h?'A':'D';}
-function calcPts(ph,pa,rh,ra){
+const PHASE_PTS = {
+  grupos:        {exact:3, winner:1},
+  dieciseisavos: {exact:4, winner:2},
+  octavos:       {exact:5, winner:3},
+  cuartos:       {exact:6, winner:4},
+  semifinales:   {exact:8, winner:5},
+  tercero:       {exact:6, winner:4},
+  final:         {exact:10,winner:6},
+};
+function getPhaseKey(mid) {
+  mid=+mid;
+  if(mid<=72) return 'grupos';
+  if(mid<=88) return 'dieciseisavos';
+  if(mid<=96) return 'octavos';
+  if(mid<=100) return 'cuartos';
+  if(mid<=102) return 'semifinales';
+  if(mid===103) return 'tercero';
+  return 'final';
+}
+function calcPts(ph,pa,rh,ra,mid){
   if(ph==null||pa==null||rh==null||ra==null)return 0;
-  if(+ph===+rh&&+pa===+ra)return 3;
-  if(wnr(+ph,+pa)===wnr(+rh,+ra))return 1;
+  const pts=PHASE_PTS[getPhaseKey(mid)]||PHASE_PTS.grupos;
+  if(+ph===+rh&&+pa===+ra)return pts.exact;
+  if(wnr(+ph,+pa)===wnr(+rh,+ra))return pts.winner;
   return 0;
+}
+// Phase status: 'pending_teams' | 'open' | 'closed'
+function getPhaseStatus(phaseKey) {
+  const now=new Date();
+  if(phaseKey==='grupos') return now<new Date(DB.deadline)?'open':'closed';
+  // Check if teams assigned for this phase
+  const phaseMatchIds = {
+    dieciseisavos:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88],
+    octavos:[89,90,91,92,93,94,95,96],
+    cuartos:[97,98,99,100],
+    semifinales:[101,102],
+    tercero:[103],
+    final:[104]
+  };
+  const mids = phaseMatchIds[phaseKey]||[];
+  const teamsSet = mids.some(id=>{
+    const m=ALL_MATCHES.find(x=>x.id===id);
+    return m && m.home && m.home.length>3 && !m.home.match(/^[W|L]\d/) && !m.home.match(/^\d[A-L]/) && !m.home.match(/^[A-Z]\d/);
+  });
+  if(!teamsSet) return 'pending_teams';
+  const dl=DB.phaseDeadlines[phaseKey];
+  if(!dl) return 'open';
+  return now<new Date(dl)?'open':'closed';
 }
 function getStats(pid){
   let pts=0,ex=0,wn=0,wr=0,pend=0;
   const preds=DB.predictions[pid]||{};
-  Object.values(GROUPS).forEach(g=>g.matches.forEach(m=>{
+  // Count all matches (groups + KO)
+  ALL_MATCHES.forEach(m=>{
     const res=DB.results[m.id],pred=preds[m.id];
     if(!res){if(pred)pend++;return;}
     if(!pred){wr++;return;}
-    const p=calcPts(pred.h,pred.a,res.h,res.a);
-    pts+=p;if(p===3)ex++;else if(p===1)wn++;else wr++;
-  }));
+    const phKey=getPhaseKey(m.id);
+    const p=calcPts(pred.h,pred.a,res.h,res.a,m.id);
+    const ptsObj=PHASE_PTS[phKey]||PHASE_PTS.grupos;
+    pts+=p;
+    if(p===ptsObj.exact)ex++;
+    else if(p===ptsObj.winner)wn++;
+    else wr++;
+  });
   return {pts,ex,wn,wr,pend};
 }
 function getLB(){
@@ -659,6 +790,95 @@ function render(){
 // ══════════════════════════════════════════════
 // VIEW: FIXTURE (Excel-style group cards)
 // ══════════════════════════════════════════════
+function renderKOPhase(phaseKey, tabs, isUserView, pid) {
+  const PHASE_NAMES = {dieciseisavos:'Dieciseisavos de Final',octavos:'Octavos de Final',cuartos:'Cuartos de Final',semifinales:'Semifinales',tercero:'3er y 4to Lugar',final:'Gran Final'};
+  const PHASE_IDS = {dieciseisavos:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88],octavos:[89,90,91,92,93,94,95,96],cuartos:[97,98,99,100],semifinales:[101,102],tercero:[103],final:[104]};
+  const status = getPhaseStatus(phaseKey);
+  const ptsObj = PHASE_PTS[phaseKey]||PHASE_PTS.grupos;
+  const mids = PHASE_IDS[phaseKey]||[];
+  const preds = (isUserView&&pid&&DB.predictions[pid])||{};
+  const phDeadline = DB.phaseDeadlines[phaseKey];
+  const dl = phDeadline ? new Date(phDeadline) : null;
+  const now = new Date();
+
+  let statusBanner = '';
+  if(status==='pending_teams') {
+    statusBanner=`<div class="alert alert-warn">⚙️ El administrador aún no ha asignado los equipos clasificados para esta fase.</div>`;
+  } else if(status==='open' && isUserView) {
+    const timeLeft = dl ? Math.max(0,Math.floor((dl-now)/3600000)) : 999;
+    statusBanner=`<div class="alert alert-info">✏️ <strong>Predicciones abiertas</strong> · Cierre: ${dl?dl.toLocaleDateString('es-EC')+' '+dl.toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'}):'pendiente'} ${timeLeft<24?'· ⚠️ '+timeLeft+'h restantes':''}</div>`;
+  } else if(status==='closed' && isUserView) {
+    statusBanner=`<div class="alert alert-warn">🔒 Predicciones cerradas para esta fase.</div>`;
+  }
+
+  let matchHtml = mids.map(mid => {
+    const m = ALL_MATCHES.find(x=>x.id===mid);
+    if(!m) return '';
+    const res = DB.results[mid];
+    const pred = preds[mid];
+    const hasTeams = m.home && m.home.length>3 && !m.home.match(/^[WL]\d/) && !m.home.match(/^\d[A-L]/);
+
+    if(!hasTeams) {
+      return `<div class="match-row" style="justify-content:center">
+        <div style="text-align:center;color:var(--muted);padding:10px">
+          <div style="font-size:12px">#${mid} · Equipos pendientes de clasificar</div>
+        </div>
+      </div>`;
+    }
+
+    let pts = res&&pred ? calcPts(pred.h,pred.a,res.h,res.a,mid) : null;
+    let cls = pred?'predicted':'';
+    if(res&&pred) cls = pts===ptsObj.exact?'correct':pts===ptsObj.winner?'winner-ok':'wrong';
+
+    const canPredict = isUserView && status==='open';
+    let scoreCenter = '';
+    if(res!=null) {
+      scoreCenter=`<div class="score-display">${res.h} – ${res.a}</div>`;
+      if(pred) scoreCenter+=`<div style="font-size:10px;color:var(--muted)">Pred: ${pred.h}–${pred.a}</div>`;
+      if(pts!==null) scoreCenter+=`<span class="pts-badge" style="background:${pts===ptsObj.exact?'var(--gold)':pts>0?'var(--green)':'var(--red)'};color:${pts===ptsObj.exact?'#000':'#fff'}">+${pts} pts</span>`;
+    } else if(canPredict) {
+      scoreCenter=`<div class="score-inputs">
+        <input type="number" min="0" max="20" value="${pred&&pred.h!=null?pred.h:''}" placeholder="0" onchange="setPred(${mid},'h',this.value)" style="width:48px;height:32px;font-size:16px">
+        <span class="score-dash">–</span>
+        <input type="number" min="0" max="20" value="${pred&&pred.a!=null?pred.a:''}" placeholder="0" onchange="setPred(${mid},'a',this.value)" style="width:48px;height:32px;font-size:16px">
+      </div>`;
+    } else {
+      scoreCenter=`<div class="score-display score-pending">${pred?pred.h+' – '+pred.a:'vs'}</div>`;
+    }
+
+    return `<div class="match-row ${cls}" style="padding:12px 16px">
+      <div class="team-cell"><span class="tflag">${m.hf||'⚽'}</span><span class="tname">${m.home}</span></div>
+      <div class="score-cell">
+        <div class="match-num">#${mid}</div>
+        <div class="match-dt">${m.dt||m.fecha||''}</div>
+        ${scoreCenter}
+      </div>
+      <div class="team-cell away"><span class="tflag">${m.af||'⚽'}</span><span class="tname">${m.away}</span></div>
+    </div>`;
+  }).join('');
+
+  return `
+  ${isUserView?`<div class="card" style="padding:12px 18px;margin-bottom:14px">
+    <div class="flex justify-between items-center">
+      <div><span style="font-size:20px">${PARTICIPANTS.find(p=>p.id===pid)?.emoji}</span>
+      <span style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;margin-left:8px;color:${PARTICIPANTS.find(p=>p.id===pid)?.color}">${PARTICIPANTS.find(p=>p.id===pid)?.name}</span></div>
+      <button class="btn btn-ghost btn-sm" onclick="loggedPid=null;render()">Salir</button>
+    </div>
+  </div>`:''}
+  ${statusBanner}
+  ${tabs}
+  <div class="group-card">
+    <div class="group-card-header">
+      <div class="group-letter" style="font-size:28px;width:auto;padding-right:8px">🏆</div>
+      <div>
+        <div class="group-card-title">${PHASE_NAMES[phaseKey]||phaseKey}</div>
+        <div class="text-muted" style="font-size:12px">✅ Exacto = ${ptsObj.exact} pts · 🟡 Ganador = ${ptsObj.winner} pt${ptsObj.winner>1?'s':''}</div>
+      </div>
+    </div>
+    ${matchHtml}
+  </div>`;
+}
+
 function vFixture(){
   const g=GROUPS[selGroup];
   const standings=computeStandings(selGroup);
@@ -666,10 +886,27 @@ function vFixture(){
   const isUserView=!!loggedPid;
   const deadline=new Date(DB.deadline),closed=new Date()>deadline;
 
-  // Group tabs
+  // Nav tabs: Groups + KO phases
+  const KO_PHASE_LIST = [
+    {key:'dieciseisavos',label:'1/16'},
+    {key:'octavos',label:'Octavos'},
+    {key:'cuartos',label:'Cuartos'},
+    {key:'semifinales',label:'Semis'},
+    {key:'tercero',label:'3er Lugar'},
+    {key:'final',label:'Final'},
+  ];
+
   let tabs=`<div class="group-tabs-bar">`;
+  // Group tabs
   Object.keys(GROUPS).forEach(k=>{
-    tabs+=`<button class="gtab ${selGroup===k?'active':''}" onclick="selGroup='${k}';render()">Grupo ${k}</button>`;
+    tabs+=`<button class="gtab ${selGroup===k&&selKOPhase===null?'active':''}" onclick="selGroup='${k}';selKOPhase=null;render()">Grupo ${k}</button>`;
+  });
+  // KO phase tabs — only show if teams assigned OR user is admin
+  KO_PHASE_LIST.forEach(p=>{
+    const st=getPhaseStatus(p.key);
+    if(st==='pending_teams'&&!adminOk) return; // hide if not ready and not admin
+    const badge = st==='open'?'🟢':st==='closed'?'🔒':'⚙️';
+    tabs+=`<button class="gtab ${selKOPhase===p.key?'active':''}" onclick="selKOPhase='${p.key}';render()">${badge} ${p.label}</button>`;
   });
   tabs+=`</div>`;
 
@@ -687,7 +924,7 @@ function vFixture(){
       const pred=isUserView?preds[m.id]:null;
       let pts=null, rowCls='';
       if(res&&pred){
-        pts=calcPts(pred.h,pred.a,res.h,res.a);
+        pts=calcPts(pred.h,pred.a,res.h,res.a,m.id);
         rowCls=pts===3?'correct':pts===1?'winner-ok':'wrong';
       }
       const resH=res!=null?res.h:null, resA=res!=null?res.a:null;
@@ -757,8 +994,13 @@ function vFixture(){
     </tr>`;
   });
 
+  // If KO phase selected, render KO view instead of groups
+  if(selKOPhase !== null) {
+    return renderKOPhase(selKOPhase, tabs, isUserView, loggedPid);
+  }
+
   const infoBar=isUserView?
-    (closed?`<div class="alert alert-warn mb-2">⏰ Polla cerrada. Solo visualización.</div>`:
+    (closed?`<div class="alert alert-warn mb-2">⏰ Polla de grupos cerrada. Solo visualización.</div>`:
             `<div class="alert alert-info mb-2">✏️ Ingresa tus pronósticos · Cierre: ${new Date(DB.deadline).toLocaleDateString('es-EC')} ${new Date(DB.deadline).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})}</div>`):'';
 
   return `
@@ -844,7 +1086,7 @@ function vMiPolla(){
     g.matches.forEach(m=>{
       const res=DB.results[m.id],pred=preds[m.id];
       let pts=null,cls='';
-      if(res&&pred){pts=calcPts(pred.h,pred.a,res.h,res.a);cls=pts===3?'correct':pts===1?'winner-ok':'wrong';}
+      if(res&&pred){pts=calcPts(pred.h,pred.a,res.h,res.a,m.id);cls=pts===3?'correct':pts===1?'winner-ok':'wrong';}
       let sc='';
       if(res!=null) sc=`<div class="score-display" style="font-size:22px">${res.h} – ${res.a}</div>${pred?`<div style="font-size:10px;color:var(--muted)">Pred: ${pred.h}–${pred.a}</div>`:''}${pts!==null?`<span class="pts-badge pts-${pts}">+${pts} pts</span>`:''}`;
       else if(!closed) sc=`<div class="score-inputs">
@@ -917,7 +1159,7 @@ function vLeaderboard(){
     <div class="lb-emoji">${rnkEmoji[i]||''}</div>
     <div class="lb-info">
       <div class="lb-name" style="color:${p.color}">${p.emoji} ${p.name}</div>
-      <div class="lb-detail">✅ ${p.ex} exactos · 🟡 ${p.wn} ganador · ❌ ${p.wr} fallos · ⏳ ${p.pend}</div>
+      <div class="lb-detail">✅ ${p.ex} exactos · 🟡 ${p.wn} ganador · ❌ ${p.wr} fallos · ⏳ ${p.pend} pend.</div>
       <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,p.pts*1.5)}%"></div></div>
     </div>
     <div>
@@ -965,14 +1207,14 @@ function vAdmin(){
     </div>`;
   }).join('');
 
-  return `<div class="card">
+  const adminGroupsHtml = `<div class="card">
     <div class="flex justify-between items-center">
       <div class="card-title">⚙️ Administrador <span class="admin-badge">ADMIN</span></div>
       <button class="btn btn-ghost btn-sm" onclick="adminOk=false;render()">🔒 Salir</button>
     </div>
     <div class="alert alert-success">✅ Sesión activa. Ingresa los resultados de cada partido.</div>
     <div class="admin-grid">
-      <div class="fg"><label class="lbl">Fecha límite de predicciones</label>
+      <div class="fg"><label class="lbl">Fecha límite fase de grupos</label>
       <input class="field" type="datetime-local" value="${DB.deadline.slice(0,16)}" onchange="DB.deadline=this.value+':00'"></div>
       <div class="fg"><label class="lbl">Estado</label>
       <div style="padding:10px;background:var(--bg3);border-radius:7px;font-size:12px;color:var(--muted)">
@@ -986,10 +1228,82 @@ function vAdmin(){
   </div>
   <div class="group-card">
     <div class="group-card-header"><div class="group-letter">${adminPhase}</div>
-    <div class="group-card-title">Ingresar Resultados · Grupo ${adminPhase}</div></div>
+    <div class="group-card-title">Resultados Fase de Grupos · Grupo ${adminPhase}</div></div>
     ${tabs}
     ${mRows}
   </div>`;
+
+  // ── KO PHASE MANAGEMENT ────────────────────────────────────
+  const KO_PHASES = [
+    {key:'dieciseisavos', name:'Dieciseisavos', ids:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88]},
+    {key:'octavos',       name:'Octavos de Final', ids:[89,90,91,92,93,94,95,96]},
+    {key:'cuartos',       name:'Cuartos de Final', ids:[97,98,99,100]},
+    {key:'semifinales',   name:'Semifinales', ids:[101,102]},
+    {key:'tercero',       name:'3er y 4to Lugar', ids:[103]},
+    {key:'final',         name:'Gran Final', ids:[104]},
+  ];
+
+  let koHtml = '';
+  KO_PHASES.forEach(ph => {
+    const status = getPhaseStatus(ph.key);
+    const dl = DB.phaseDeadlines[ph.key] || '';
+    const statusLabel = status==='pending_teams'?'⚙️ Pendiente asignar equipos': status==='open'?'✅ Abierta para predicciones':'🔒 Cerrada';
+    const statusColor = status==='pending_teams'?'var(--muted)': status==='open'?'var(--green)':'var(--red)';
+
+    let matchRows = ph.ids.map(mid => {
+      const m = ALL_MATCHES.find(x=>x.id===mid);
+      const res = DB.results[mid];
+      const teams = DB.phaseTeams[mid] || {};
+      const hasTeams = m && m.home && m.home.length>3 && !m.home.match(/^[WL]\d/) && !m.home.match(/^\d[A-L]/);
+
+      return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Partido #${mid} · ${m?m.dt||m.fecha:'TBD'}</div>
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px">
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:3px">LOCAL</div>
+            <input class="field" style="font-size:13px" id="th_${mid}" placeholder="Ej: Argentina" value="${hasTeams?m.home:''}" onchange="updateTeamName(${mid},'home',this.value)">
+            <input class="field" style="font-size:11px;margin-top:4px" id="thf_${mid}" placeholder="🇦🇷 bandera emoji" value="${hasTeams?m.hf:''}" onchange="updateTeamName(${mid},'hf',this.value)">
+          </div>
+          <div style="text-align:center;color:var(--muted);font-size:20px;font-weight:bold">vs</div>
+          <div>
+            <div style="font-size:10px;color:var(--muted);margin-bottom:3px">VISITANTE</div>
+            <input class="field" style="font-size:13px" id="ta_${mid}" placeholder="Ej: Brasil" value="${hasTeams?m.away:''}" onchange="updateTeamName(${mid},'away',this.value)">
+            <input class="field" style="font-size:11px;margin-top:4px" id="taf_${mid}" placeholder="🇧🇷 bandera emoji" value="${hasTeams?m.af:''}" onchange="updateTeamName(${mid},'af',this.value)">
+          </div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="savePhaseTeams(${mid})">💾 Guardar Equipos</button>
+        ${hasTeams ? `<span style="margin-left:8px;color:var(--green);font-size:11px">✅ ${m.home} vs ${m.away}</span>` : ''}
+        ${hasTeams && res!=null ? `<span style="margin-left:8px;color:var(--muted);font-size:11px">Resultado: ${res.h}–${res.a}</span>` : ''}
+      </div>`;
+    }).join('');
+
+    koHtml += `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;overflow:hidden">
+      <div style="background:linear-gradient(90deg,#1c2840,#0d1117);border-bottom:1px solid var(--border);padding:12px 18px;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:2px;text-transform:uppercase">${ph.name}</div>
+          <div style="font-size:11px;margin-top:2px;color:${statusColor}">${statusLabel}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Cierre predicciones</div>
+          <input type="datetime-local" class="field" style="font-size:11px;width:auto" value="${dl.slice?.(0,16)||''}"
+            onchange="savePhaseDeadline('${ph.key}',this.value)">
+        </div>
+      </div>
+      <div style="padding:14px">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:8px;background:rgba(31,111,235,0.1);border-radius:6px;border:1px solid rgba(31,111,235,0.2)">
+          💡 <strong>Flujo:</strong> 1) Ingresa los equipos clasificados · 2) Define la fecha límite (12h antes del 1er partido) · 3) Los participantes llenan sus pronósticos · 4) Ingresa los resultados en la sección de grupos/partidos
+        </div>
+        ${matchRows}
+      </div>
+    </div>`;
+  });
+
+  return adminGroupsHtml + `<div class="card" style="margin-top:20px">
+    <div class="card-title">🏆 Gestión Fases Eliminatorias</div>
+    <div class="alert alert-info mb-2">Aquí asignas los equipos clasificados a cada llave y defines cuándo cierra la predicción de esa fase (recomendado: 12 horas antes del primer partido).</div>
+    ${koHtml}
+  </div>`;
+
 }
 
 // ══════════════════════════════════════════════
@@ -1091,7 +1405,7 @@ function printPolla(pid){
   let allM=[]; Object.values(GROUPS).forEach(g=>allM.push(...g.matches));
   const rows=allM.map(m=>{
     const pred=preds[m.id],res=DB.results[m.id];
-    const pts=res&&pred?calcPts(pred.h,pred.a,res.h,res.a):'—';
+    const pts=res&&pred?calcPts(pred.h,pred.a,res.h,res.a,m.id):'—';
     const c=pts===3?'#d97706':pts===1?'#16a34a':pts===0?'#dc2626':'';
     return `<tr><td>#${m.id}</td><td>${m.jor||''}</td><td>${m.hf} ${m.home}</td><td>${m.af} ${m.away}</td><td>${m.dt||''}</td><td style="font-weight:bold">${pred?`${pred.h} – ${pred.a}`:'—'}</td><td>${res?`${res.h}–${res.a}`:'—'}</td><td style="color:${c};font-weight:bold">${pts}</td></tr>`;
   }).join('');
@@ -1104,6 +1418,39 @@ function printPolla(pid){
   <div class="foot">Polla Mundialista Familia Tito Vanoni · FIFA World Cup 2026 · USA · Canadá · México</div>
   <script>window.onload=()=>window.print()<\/script></body></html>`);
   w.document.close();
+}
+
+// ══ KO PHASE HANDLERS ══
+function updateTeamName(mid, side, val) {
+  if(!DB.phaseTeams[mid]) DB.phaseTeams[mid] = {};
+  DB.phaseTeams[mid][side] = val;
+}
+
+function savePhaseTeams(mid) {
+  const home = document.getElementById('th_'+mid)?.value?.trim();
+  const hf   = document.getElementById('thf_'+mid)?.value?.trim();
+  const away = document.getElementById('ta_'+mid)?.value?.trim();
+  const af   = document.getElementById('taf_'+mid)?.value?.trim();
+  if(!home || !away) { alert('Ingresa ambos equipos'); return; }
+  // Update local match
+  const match = ALL_MATCHES.find(x=>x.id===+mid);
+  if(match) { match.home=home; match.hf=hf||''; match.away=away; match.af=af||''; }
+  // Save to DB
+  DB.phaseTeams[mid] = {home, hf:hf||'', away, af:af||''};
+  saveLocal();
+  syncWrite({action:'savePhaseTeams', mid, home, hf:hf||'', away, af:af||''});
+  // Visual feedback
+  const btn = event?.target;
+  if(btn){ const orig=btn.textContent; btn.textContent='✅ Guardado'; btn.disabled=true;
+    setTimeout(()=>{ btn.textContent=orig; btn.disabled=false; render(); },2000); }
+}
+
+function savePhaseDeadline(phaseKey, val) {
+  const dl = val + ':00';
+  DB.phaseDeadlines[phaseKey] = dl;
+  saveLocal();
+  syncWrite({action:'savePhaseDeadline', phaseKey, deadline: dl});
+  setSS('ing','↑ Guardando deadline...');
 }
 
 // ══ INIT ══
