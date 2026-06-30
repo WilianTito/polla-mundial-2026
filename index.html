@@ -520,44 +520,45 @@ Object.values(GROUPS).forEach(g => g.matches.forEach(m => ALL_MATCHES.push(m)));
 // Agregar partidos KO (Dieciseisavos → Final)
 // Los equipos se completan por el admin cuando clasifiquen
 const KO_MATCHES_DEF = [
-  // Dieciseisavos
-  {id:73,jor:'',phase:'dieciseisavos',home:'2A',hf:'',away:'2B',af:'',dt:'28/06 21:00'},
-  {id:74,jor:'',phase:'dieciseisavos',home:'1E',hf:'',away:'3ABCDF',af:'',dt:'29/06 19:00'},
-  {id:75,jor:'',phase:'dieciseisavos',home:'1F',hf:'',away:'2C',af:'',dt:'29/06 22:30'},
-  {id:76,jor:'',phase:'dieciseisavos',home:'1C',hf:'',away:'2F',af:'',dt:'29/06 19:00'},
-  {id:77,jor:'',phase:'dieciseisavos',home:'2E',hf:'',away:'2I',af:'',dt:'30/06 19:00'},
-  {id:78,jor:'',phase:'dieciseisavos',home:'1I',hf:'',away:'3CDFGH',af:'',dt:'30/06 23:00'},
-  {id:79,jor:'',phase:'dieciseisavos',home:'1A',hf:'',away:'3CEFHI',af:'',dt:'01/07 03:00'},
-  {id:80,jor:'',phase:'dieciseisavos',home:'1L',hf:'',away:'3EHIJK',af:'',dt:'01/07 18:00'},
-  {id:81,jor:'',phase:'dieciseisavos',home:'1G',hf:'',away:'3AEHIJ',af:'',dt:'01/07 22:00'},
-  {id:82,jor:'',phase:'dieciseisavos',home:'1D',hf:'',away:'3BEFIJ',af:'',dt:'02/07 02:00'},
-  {id:83,jor:'',phase:'dieciseisavos',home:'2K',hf:'',away:'2L',af:'',dt:'02/07 21:00'},
-  {id:84,jor:'',phase:'dieciseisavos',home:'1H',hf:'',away:'2J',af:'',dt:'03/07 01:00'},
-  {id:85,jor:'',phase:'dieciseisavos',home:'1B',hf:'',away:'3EFGIJ',af:'',dt:'03/07 05:00'},
-  {id:86,jor:'',phase:'dieciseisavos',home:'1J',hf:'',away:'2H',af:'',dt:'04/07 00:00'},
-  {id:87,jor:'',phase:'dieciseisavos',home:'1K',hf:'',away:'3DEIJL',af:'',dt:'04/07 03:30'},
-  {id:88,jor:'',phase:'dieciseisavos',home:'2D',hf:'',away:'2G',af:'',dt:'03/07 20:00'},
-  // Octavos
-  {id:89,jor:'',phase:'octavos',home:'W74',hf:'',away:'W77',af:'',dt:'04/07 19:00'},
-  {id:90,jor:'',phase:'octavos',home:'W73',hf:'',away:'W75',af:'',dt:'04/07 23:00'},
-  {id:91,jor:'',phase:'octavos',home:'W76',hf:'',away:'W78',af:'',dt:'05/07 22:00'},
-  {id:92,jor:'',phase:'octavos',home:'W79',hf:'',away:'W80',af:'',dt:'06/07 02:00'},
-  {id:93,jor:'',phase:'octavos',home:'W83',hf:'',away:'W84',af:'',dt:'06/07 21:00'},
-  {id:94,jor:'',phase:'octavos',home:'W81',hf:'',away:'W82',af:'',dt:'07/07 02:00'},
-  {id:95,jor:'',phase:'octavos',home:'W86',hf:'',away:'W88',af:'',dt:'07/07 18:00'},
-  {id:96,jor:'',phase:'octavos',home:'W85',hf:'',away:'W87',af:'',dt:'07/07 22:00'},
-  // Cuartos
-  {id:97, jor:'',phase:'cuartos',home:'W89',hf:'',away:'W90',af:'',dt:'09/07 22:00'},
-  {id:98, jor:'',phase:'cuartos',home:'W93',hf:'',away:'W94',af:'',dt:'10/07 21:00'},
-  {id:99, jor:'',phase:'cuartos',home:'W91',hf:'',away:'W92',af:'',dt:'11/07 23:00'},
-  {id:100,jor:'',phase:'cuartos',home:'W95',hf:'',away:'W96',af:'',dt:'12/07 03:00'},
-  // Semifinales
-  {id:101,jor:'',phase:'semifinales',home:'W97',hf:'',away:'W98',af:'',dt:'14/07 21:00'},
-  {id:102,jor:'',phase:'semifinales',home:'W99',hf:'',away:'W100',af:'',dt:'15/07 21:00'},
-  // Tercer lugar
-  {id:103,jor:'',phase:'tercero',home:'L101',hf:'',away:'L102',af:'',dt:'18/07 23:00'},
-  // Final
-  {id:104,jor:'',phase:'final',home:'W101',hf:'',away:'W102',af:'',dt:'19/07 21:00'},
+  // ── DIECISEISAVOS DE FINAL ──────────────────────────────────
+  // Hora Ecuador (UTC-5). Partidos FIFA: 11:00, 14:00, 17:00, 20:00 ECT
+  {id:73, phase:'dieciseisavos', home:'2A',       hf:'', away:'2B',       af:'', dt:'28/06', hora:'16:00', iso:'2026-06-28T21:00:00Z'},
+  {id:74, phase:'dieciseisavos', home:'1E',       hf:'', away:'3ABCDF',   af:'', dt:'29/06', hora:'14:00', iso:'2026-06-29T19:00:00Z'},
+  {id:75, phase:'dieciseisavos', home:'1F',       hf:'', away:'2C',       af:'', dt:'29/06', hora:'17:00', iso:'2026-06-29T22:00:00Z'},
+  {id:76, phase:'dieciseisavos', home:'1C',       hf:'', away:'2F',       af:'', dt:'29/06', hora:'14:00', iso:'2026-06-29T19:00:00Z'},
+  {id:77, phase:'dieciseisavos', home:'2E',       hf:'', away:'2I',       af:'', dt:'30/06', hora:'14:00', iso:'2026-06-30T19:00:00Z'},
+  {id:78, phase:'dieciseisavos', home:'1I',       hf:'', away:'3CDFGH',   af:'', dt:'30/06', hora:'18:00', iso:'2026-06-30T23:00:00Z'},
+  {id:79, phase:'dieciseisavos', home:'1A',       hf:'', away:'3CEFHI',   af:'', dt:'30/06', hora:'22:00', iso:'2026-07-01T03:00:00Z'},
+  {id:80, phase:'dieciseisavos', home:'1L',       hf:'', away:'3EHIJK',   af:'', dt:'01/07', hora:'13:00', iso:'2026-07-01T18:00:00Z'},
+  {id:81, phase:'dieciseisavos', home:'1G',       hf:'', away:'3AEHIJ',   af:'', dt:'01/07', hora:'17:00', iso:'2026-07-01T22:00:00Z'},
+  {id:82, phase:'dieciseisavos', home:'1D',       hf:'', away:'3BEFIJ',   af:'', dt:'01/07', hora:'21:00', iso:'2026-07-02T02:00:00Z'},
+  {id:83, phase:'dieciseisavos', home:'2K',       hf:'', away:'2L',       af:'', dt:'02/07', hora:'16:00', iso:'2026-07-02T21:00:00Z'},
+  {id:84, phase:'dieciseisavos', home:'1H',       hf:'', away:'2J',       af:'', dt:'02/07', hora:'20:00', iso:'2026-07-03T01:00:00Z'},
+  {id:85, phase:'dieciseisavos', home:'1B',       hf:'', away:'3EFGIJ',   af:'', dt:'03/07', hora:'00:00', iso:'2026-07-03T05:00:00Z'},
+  {id:86, phase:'dieciseisavos', home:'1J',       hf:'', away:'2H',       af:'', dt:'03/07', hora:'19:00', iso:'2026-07-04T00:00:00Z'},
+  {id:87, phase:'dieciseisavos', home:'1K',       hf:'', away:'3DEIJL',   af:'', dt:'03/07', hora:'22:30', iso:'2026-07-04T03:30:00Z'},
+  {id:88, phase:'dieciseisavos', home:'2D',       hf:'', away:'2G',       af:'', dt:'03/07', hora:'15:00', iso:'2026-07-03T20:00:00Z'},
+  // ── OCTAVOS DE FINAL ────────────────────────────────────────
+  {id:89, phase:'octavos',       home:'W74',      hf:'', away:'W77',      af:'', dt:'04/07', hora:'14:00', iso:'2026-07-04T19:00:00Z'},
+  {id:90, phase:'octavos',       home:'W73',      hf:'', away:'W75',      af:'', dt:'04/07', hora:'18:00', iso:'2026-07-04T23:00:00Z'},
+  {id:91, phase:'octavos',       home:'W76',      hf:'', away:'W78',      af:'', dt:'05/07', hora:'17:00', iso:'2026-07-05T22:00:00Z'},
+  {id:92, phase:'octavos',       home:'W79',      hf:'', away:'W80',      af:'', dt:'05/07', hora:'21:00', iso:'2026-07-06T02:00:00Z'},
+  {id:93, phase:'octavos',       home:'W83',      hf:'', away:'W84',      af:'', dt:'06/07', hora:'16:00', iso:'2026-07-06T21:00:00Z'},
+  {id:94, phase:'octavos',       home:'W81',      hf:'', away:'W82',      af:'', dt:'06/07', hora:'21:00', iso:'2026-07-07T02:00:00Z'},
+  {id:95, phase:'octavos',       home:'W86',      hf:'', away:'W88',      af:'', dt:'07/07', hora:'13:00', iso:'2026-07-07T18:00:00Z'},
+  {id:96, phase:'octavos',       home:'W85',      hf:'', away:'W87',      af:'', dt:'07/07', hora:'17:00', iso:'2026-07-07T22:00:00Z'},
+  // ── CUARTOS DE FINAL ────────────────────────────────────────
+  {id:97,  phase:'cuartos',      home:'W89',      hf:'', away:'W90',      af:'', dt:'09/07', hora:'17:00', iso:'2026-07-09T22:00:00Z'},
+  {id:98,  phase:'cuartos',      home:'W93',      hf:'', away:'W94',      af:'', dt:'10/07', hora:'16:00', iso:'2026-07-10T21:00:00Z'},
+  {id:99,  phase:'cuartos',      home:'W91',      hf:'', away:'W92',      af:'', dt:'11/07', hora:'18:00', iso:'2026-07-11T23:00:00Z'},
+  {id:100, phase:'cuartos',      home:'W95',      hf:'', away:'W96',      af:'', dt:'11/07', hora:'22:00', iso:'2026-07-12T03:00:00Z'},
+  // ── SEMIFINALES ─────────────────────────────────────────────
+  {id:101, phase:'semifinales',  home:'W97',      hf:'', away:'W98',      af:'', dt:'14/07', hora:'16:00', iso:'2026-07-14T21:00:00Z'},
+  {id:102, phase:'semifinales',  home:'W99',      hf:'', away:'W100',     af:'', dt:'15/07', hora:'16:00', iso:'2026-07-15T21:00:00Z'},
+  // ── TERCER LUGAR ────────────────────────────────────────────
+  {id:103, phase:'tercero',      home:'L101',     hf:'', away:'L102',     af:'', dt:'18/07', hora:'15:00', iso:'2026-07-18T20:00:00Z'},
+  // ── GRAN FINAL ──────────────────────────────────────────────
+  {id:104, phase:'final',        home:'W101',     hf:'', away:'W102',     af:'', dt:'19/07', hora:'16:00', iso:'2026-07-19T21:00:00Z'},
 ];
 KO_MATCHES_DEF.forEach(m => ALL_MATCHES.push(m));
 
@@ -610,14 +611,15 @@ async function syncRead(){
     }
     if(remoteData.deadline) DB.deadline = remoteData.deadline;
     if(remoteData.phaseDeadlines) DB.phaseDeadlines = {...DB.phaseDeadlines, ...remoteData.phaseDeadlines};
-    if(remoteData.phaseTeams) {
+    if(remoteData.phaseTeams && Object.keys(remoteData.phaseTeams).length > 0) {
+      // Remote phaseTeams siempre gana — es la fuente de verdad guardada por admin
       DB.phaseTeams = {...DB.phaseTeams, ...remoteData.phaseTeams};
-      // Apply team names to matches
-      Object.entries(DB.phaseTeams).forEach(([mid,t])=>{
-        const match=ALL_MATCHES.find(x=>x.id===+mid);
-        if(match){ match.home=t.home; match.hf=t.hf||''; match.away=t.away; match.af=t.af||''; }
-      });
     }
+    if(remoteData.phaseDeadlines && Object.keys(remoteData.phaseDeadlines).length > 0) {
+      DB.phaseDeadlines = {...DB.phaseDeadlines, ...remoteData.phaseDeadlines};
+    }
+    // Siempre aplicar equipos a ALL_MATCHES después de merge
+    applyPhaseTeamsToMatches();
     saveLocal();
     setSS('ok','✓ Sincronizado');
   }catch(e){ loadLocal(); setSS('err','⚠ Sin conexión'); }
@@ -656,11 +658,7 @@ function loadLocal(){
       DB.deadline=d.deadline||DB.deadline;
       DB.phaseDeadlines=d.phaseDeadlines||{};
       DB.phaseTeams=d.phaseTeams||{};
-      // Apply saved team names to ALL_MATCHES
-      Object.entries(DB.phaseTeams).forEach(([mid,t])=>{
-        const match=ALL_MATCHES.find(x=>x.id===+mid);
-        if(match){ match.home=t.home; match.hf=t.hf||''; match.away=t.away; match.af=t.af||''; }
-      });
+      applyPhaseTeamsToMatches();
     }
   }catch(e){}
 }
@@ -668,6 +666,63 @@ function setSS(t,m){
   const el=document.getElementById('syncStatus'); if(!el)return;
   const c={ok:'s-ok',err:'s-err',ing:'s-ing'};
   el.innerHTML=`<span class="${c[t]||'s-ing'}">●</span> ${m}`;
+}
+
+// ══════════════════════════════════════════════
+// HELPERS — Teams & Match timing
+// ══════════════════════════════════════════════
+
+// Aplica los equipos guardados en DB.phaseTeams a los objetos ALL_MATCHES
+function applyPhaseTeamsToMatches() {
+  Object.entries(DB.phaseTeams).forEach(([mid, t]) => {
+    const match = ALL_MATCHES.find(x => x.id === +mid);
+    if(match && t.home && t.away) {
+      match.home = t.home;
+      match.hf   = t.hf  || '';
+      match.away = t.away;
+      match.af   = t.af  || '';
+    }
+  });
+}
+
+// Verifica si un partido KO permite predicción:
+// Abierto si el equipo está asignado Y faltan más de 30 min para el partido (hora Ecuador)
+function isMatchOpenForPred(mid) {
+  const m = ALL_MATCHES.find(x => x.id === +mid);
+  if(!m) return false;
+  // Fase de grupos usa deadline global
+  if(+mid <= 72) return new Date() < new Date(DB.deadline);
+  // Partido KO: necesita equipos asignados
+  const hasTeams = m.home && m.home.length > 2
+    && !m.home.match(/^[WL]\d/)
+    && !m.home.match(/^\d[A-L]/)
+    && !m.home.match(/^[A-Z]\d[A-Z]/);
+  if(!hasTeams) return false;
+  // Verificar 30 minutos antes del partido
+  if(m.iso) {
+    const matchTime = new Date(m.iso); // ISO en UTC
+    const now = new Date();
+    const diffMin = (matchTime - now) / 60000;
+    return diffMin > 30; // Permite predicción si faltan más de 30 min
+  }
+  return false;
+}
+
+// Retorna texto del countdown para un partido
+function getMatchCountdown(mid) {
+  const m = ALL_MATCHES.find(x => x.id === +mid);
+  if(!m || !m.iso) return '';
+  const matchTime = new Date(m.iso);
+  const now = new Date();
+  const diffMin = Math.floor((matchTime - now) / 60000);
+  if(diffMin < 0) return '⚽ En juego o finalizado';
+  if(diffMin < 30) return `🔒 Cierra en ${diffMin} min`;
+  if(diffMin < 60) return `⚠️ Cierra en ${diffMin} min`;
+  const hrs = Math.floor(diffMin/60);
+  const mins = diffMin % 60;
+  if(hrs < 24) return `⏰ ${hrs}h ${mins}m para el partido`;
+  const days = Math.floor(hrs/24);
+  return `📅 ${days} día${days>1?'s':''} para el partido`;
 }
 
 // ══════════════════════════════════════════════
@@ -704,7 +759,6 @@ function calcPts(ph,pa,rh,ra,mid){
 function getPhaseStatus(phaseKey) {
   const now=new Date();
   if(phaseKey==='grupos') return now<new Date(DB.deadline)?'open':'closed';
-  // Check if teams assigned for this phase
   const phaseMatchIds = {
     dieciseisavos:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88],
     octavos:[89,90,91,92,93,94,95,96],
@@ -714,14 +768,18 @@ function getPhaseStatus(phaseKey) {
     final:[104]
   };
   const mids = phaseMatchIds[phaseKey]||[];
-  const teamsSet = mids.some(id=>{
-    const m=ALL_MATCHES.find(x=>x.id===id);
-    return m && m.home && m.home.length>3 && !m.home.match(/^[W|L]\d/) && !m.home.match(/^\d[A-L]/) && !m.home.match(/^[A-Z]\d/);
+  // Fase tiene equipos si AL MENOS UN partido tiene equipos reales
+  const anyTeamSet = mids.some(id => {
+    const m = ALL_MATCHES.find(x=>x.id===id);
+    return m && m.home && m.home.length>2
+      && !m.home.match(/^[WL]\d/)
+      && !m.home.match(/^\d[A-L]/)
+      && !m.home.match(/^[A-Z]\d[A-Z]/);
   });
-  if(!teamsSet) return 'pending_teams';
-  const dl=DB.phaseDeadlines[phaseKey];
-  if(!dl) return 'open';
-  return now<new Date(dl)?'open':'closed';
+  if(!anyTeamSet) return 'pending_teams';
+  // Hay equipos — verificar si aún hay partidos abiertos (>30 min antes)
+  const anyOpen = mids.some(id => isMatchOpenForPred(id));
+  return anyOpen ? 'open' : 'closed';
 }
 function getStats(pid){
   let pts=0,ex=0,wn=0,wr=0,pend=0;
@@ -830,8 +888,9 @@ function renderKOPhase(phaseKey, tabs, isUserView, pid) {
     let cls = pred?'predicted':'';
     if(res&&pred) cls = pts===ptsObj.exact?'correct':pts===ptsObj.winner?'winner-ok':'wrong';
 
-    const canPredict = isUserView && status==='open';
+    const canPredict = isUserView && isMatchOpenForPred(mid);
     let scoreCenter = '';
+    const countdown = getMatchCountdown(mid);
     if(res!=null) {
       scoreCenter=`<div class="score-display">${res.h} – ${res.a}</div>`;
       if(pred) scoreCenter+=`<div style="font-size:10px;color:var(--muted)">Pred: ${pred.h}–${pred.a}</div>`;
@@ -841,9 +900,11 @@ function renderKOPhase(phaseKey, tabs, isUserView, pid) {
         <input type="number" min="0" max="20" value="${pred&&pred.h!=null?pred.h:''}" placeholder="0" onchange="setPred(${mid},'h',this.value)" style="width:48px;height:32px;font-size:16px">
         <span class="score-dash">–</span>
         <input type="number" min="0" max="20" value="${pred&&pred.a!=null?pred.a:''}" placeholder="0" onchange="setPred(${mid},'a',this.value)" style="width:48px;height:32px;font-size:16px">
-      </div>`;
+      </div>
+      <div style="font-size:10px;color:var(--gold2);margin-top:3px">${countdown}</div>`;
     } else {
-      scoreCenter=`<div class="score-display score-pending">${pred?pred.h+' – '+pred.a:'vs'}</div>`;
+      scoreCenter=`<div class="score-display score-pending">${pred?pred.h+' – '+pred.a:'vs'}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:3px">${countdown}</div>`;
     }
 
     return `<div class="match-row ${cls}" style="padding:12px 16px">
@@ -1257,7 +1318,7 @@ function vAdmin(){
       const hasTeams = m && m.home && m.home.length>3 && !m.home.match(/^[WL]\d/) && !m.home.match(/^\d[A-L]/);
 
       return `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
-        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Partido #${mid} · ${m?m.dt||m.fecha:'TBD'}</div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:8px">Partido #${mid} · ${m?(m.dt||m.fecha)+(m.hora?' '+m.hora+' ECT':''):'TBD'} ${m&&m.iso?'· '+getMatchCountdown(mid):''}</div>
         <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-bottom:10px">
           <div>
             <div style="font-size:10px;color:var(--muted);margin-bottom:3px">LOCAL</div>
@@ -1434,9 +1495,10 @@ function savePhaseTeams(mid) {
   if(!home || !away) { alert('Ingresa ambos equipos'); return; }
   // Update local match
   const match = ALL_MATCHES.find(x=>x.id===+mid);
-  if(match) { match.home=home; match.hf=hf||''; match.away=away; match.af=af||''; }
-  // Save to DB
+  // Save to DB first
   DB.phaseTeams[mid] = {home, hf:hf||'', away, af:af||''};
+  // Apply ALL phaseTeams to matches (not just this one)
+  applyPhaseTeamsToMatches();
   saveLocal();
   syncWrite({action:'savePhaseTeams', mid, home, hf:hf||'', away, af:af||''});
   // Visual feedback
