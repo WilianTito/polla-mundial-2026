@@ -347,7 +347,7 @@ label.lbl { font-size: 11px; color: var(--muted); display: block; margin-bottom:
     </div>
     <div class="header-meta">
       <div class="badge-mundial">⚽ FIFA WORLD CUP 2026</div>
-      <div style="font-size:10px;color:rgba(245,197,24,0.5);letter-spacing:1px;text-align:right;margin-bottom:2px">v4.1 · 10/Jun/2026</div>
+      <div style="font-size:10px;color:rgba(245,197,24,0.5);letter-spacing:1px;text-align:right;margin-bottom:2px">v5.1 · Horarios verificados</div>
       <div id="syncStatus" class="sync-dot"><span class="spinner"></span> Cargando...</div>
     </div>
   </div>
@@ -375,6 +375,7 @@ label.lbl { font-size: 11px; color: var(--muted); display: block; margin-bottom:
 // ══════════════════════════════════════════════
 let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtpByDSMMJhQ0z4WBM5MCOxo84bDRh9sKjwDLparxWPhAvIbBQpxGek63QsUqzfP14/exec';
 let SCRIPT_READY = true;
+
 const PARTICIPANTS = [
   {id:'wilian',     name:'Wilian',     emoji:'👨‍💼', color:'#58a6ff', pass:'Mundial26W'},
   {id:'mariana',    name:'Mariana',    emoji:'👩',   color:'#f778ba', pass:'Mundial26M'},
@@ -521,44 +522,46 @@ Object.values(GROUPS).forEach(g => g.matches.forEach(m => ALL_MATCHES.push(m)));
 // Los equipos se completan por el admin cuando clasifiquen
 const KO_MATCHES_DEF = [
   // ── DIECISEISAVOS DE FINAL ──────────────────────────────────
-  // Hora Ecuador (UTC-5). Partidos FIFA: 11:00, 14:00, 17:00, 20:00 ECT
-  {id:73, phase:'dieciseisavos', home:'2A',       hf:'', away:'2B',       af:'', dt:'28/06', hora:'16:00', iso:'2026-06-28T21:00:00Z'},
-  {id:74, phase:'dieciseisavos', home:'1E',       hf:'', away:'3ABCDF',   af:'', dt:'29/06', hora:'14:00', iso:'2026-06-29T19:00:00Z'},
-  {id:75, phase:'dieciseisavos', home:'1F',       hf:'', away:'2C',       af:'', dt:'29/06', hora:'17:00', iso:'2026-06-29T22:00:00Z'},
-  {id:76, phase:'dieciseisavos', home:'1C',       hf:'', away:'2F',       af:'', dt:'29/06', hora:'14:00', iso:'2026-06-29T19:00:00Z'},
-  {id:77, phase:'dieciseisavos', home:'2E',       hf:'', away:'2I',       af:'', dt:'30/06', hora:'14:00', iso:'2026-06-30T19:00:00Z'},
-  {id:78, phase:'dieciseisavos', home:'1I',       hf:'', away:'3CDFGH',   af:'', dt:'30/06', hora:'18:00', iso:'2026-06-30T23:00:00Z'},
-  {id:79, phase:'dieciseisavos', home:'1A',       hf:'', away:'3CEFHI',   af:'', dt:'30/06', hora:'22:00', iso:'2026-07-01T03:00:00Z'},
-  {id:80, phase:'dieciseisavos', home:'1L',       hf:'', away:'3EHIJK',   af:'', dt:'01/07', hora:'13:00', iso:'2026-07-01T18:00:00Z'},
-  {id:81, phase:'dieciseisavos', home:'1G',       hf:'', away:'3AEHIJ',   af:'', dt:'01/07', hora:'17:00', iso:'2026-07-01T22:00:00Z'},
-  {id:82, phase:'dieciseisavos', home:'1D',       hf:'', away:'3BEFIJ',   af:'', dt:'01/07', hora:'21:00', iso:'2026-07-02T02:00:00Z'},
-  {id:83, phase:'dieciseisavos', home:'2K',       hf:'', away:'2L',       af:'', dt:'02/07', hora:'16:00', iso:'2026-07-02T21:00:00Z'},
-  {id:84, phase:'dieciseisavos', home:'1H',       hf:'', away:'2J',       af:'', dt:'02/07', hora:'20:00', iso:'2026-07-03T01:00:00Z'},
-  {id:85, phase:'dieciseisavos', home:'1B',       hf:'', away:'3EFGIJ',   af:'', dt:'03/07', hora:'00:00', iso:'2026-07-03T05:00:00Z'},
-  {id:86, phase:'dieciseisavos', home:'1J',       hf:'', away:'2H',       af:'', dt:'03/07', hora:'19:00', iso:'2026-07-04T00:00:00Z'},
-  {id:87, phase:'dieciseisavos', home:'1K',       hf:'', away:'3DEIJL',   af:'', dt:'03/07', hora:'22:30', iso:'2026-07-04T03:30:00Z'},
-  {id:88, phase:'dieciseisavos', home:'2D',       hf:'', away:'2G',       af:'', dt:'03/07', hora:'15:00', iso:'2026-07-03T20:00:00Z'},
+  // Horarios VERIFICADOS con fuentes oficiales (Yahoo/NBC/Sky Sports), hora Ecuador (UTC-5)
+  // ET (UTC-4 horario verano) - 1h = Ecuador. Ej: Países Bajos vs Marruecos 9pm ET = 8pm Ecuador
+  {id:73, phase:'dieciseisavos', home:'1A',       hf:'', away:'2B',       af:'', dt:'28/06', hora:'11:00', iso:'2026-06-28T16:00:00Z'},
+  {id:74, phase:'dieciseisavos', home:'1E',       hf:'', away:'3ABCDF',   af:'', dt:'29/06', hora:'15:30', iso:'2026-06-29T20:30:00Z'},
+  {id:75, phase:'dieciseisavos', home:'1F',       hf:'', away:'2C',       af:'', dt:'29/06', hora:'11:00', iso:'2026-06-29T16:00:00Z'},
+  {id:76, phase:'dieciseisavos', home:'1C',       hf:'', away:'2F',       af:'', dt:'29/06', hora:'20:00', iso:'2026-06-30T01:00:00Z'},
+  {id:77, phase:'dieciseisavos', home:'2E',       hf:'', away:'2I',       af:'', dt:'30/06', hora:'12:00', iso:'2026-06-30T17:00:00Z'},
+  {id:78, phase:'dieciseisavos', home:'1I',       hf:'', away:'3CDFGH',   af:'', dt:'30/06', hora:'16:00', iso:'2026-06-30T21:00:00Z'},
+  {id:79, phase:'dieciseisavos', home:'1A',       hf:'', away:'3CEFHI',   af:'', dt:'30/06', hora:'20:00', iso:'2026-07-01T01:00:00Z'},
+  {id:80, phase:'dieciseisavos', home:'1L',       hf:'', away:'3EHIJK',   af:'', dt:'01/07', hora:'11:00', iso:'2026-07-01T16:00:00Z'},
+  {id:81, phase:'dieciseisavos', home:'1G',       hf:'', away:'3AEHIJ',   af:'', dt:'01/07', hora:'15:00', iso:'2026-07-01T20:00:00Z'},
+  {id:82, phase:'dieciseisavos', home:'1D',       hf:'', away:'3BEFIJ',   af:'', dt:'01/07', hora:'19:00', iso:'2026-07-02T00:00:00Z'},
+  {id:83, phase:'dieciseisavos', home:'2K',       hf:'', away:'2L',       af:'', dt:'02/07', hora:'14:00', iso:'2026-07-02T19:00:00Z'},
+  {id:84, phase:'dieciseisavos', home:'1H',       hf:'', away:'2J',       af:'', dt:'02/07', hora:'18:00', iso:'2026-07-02T23:00:00Z'},
+  {id:85, phase:'dieciseisavos', home:'1B',       hf:'', away:'3EFGIJ',   af:'', dt:'02/07', hora:'22:00', iso:'2026-07-03T03:00:00Z'},
+  {id:86, phase:'dieciseisavos', home:'1J',       hf:'', away:'2H',       af:'', dt:'03/07', hora:'13:00', iso:'2026-07-03T18:00:00Z'},
+  {id:87, phase:'dieciseisavos', home:'1K',       hf:'', away:'3DEIJL',   af:'', dt:'03/07', hora:'17:00', iso:'2026-07-03T22:00:00Z'},
+  {id:88, phase:'dieciseisavos', home:'2D',       hf:'', away:'2G',       af:'', dt:'03/07', hora:'20:30', iso:'2026-07-04T01:30:00Z'},
   // ── OCTAVOS DE FINAL ────────────────────────────────────────
-  {id:89, phase:'octavos',       home:'W74',      hf:'', away:'W77',      af:'', dt:'04/07', hora:'14:00', iso:'2026-07-04T19:00:00Z'},
-  {id:90, phase:'octavos',       home:'W73',      hf:'', away:'W75',      af:'', dt:'04/07', hora:'18:00', iso:'2026-07-04T23:00:00Z'},
-  {id:91, phase:'octavos',       home:'W76',      hf:'', away:'W78',      af:'', dt:'05/07', hora:'17:00', iso:'2026-07-05T22:00:00Z'},
-  {id:92, phase:'octavos',       home:'W79',      hf:'', away:'W80',      af:'', dt:'05/07', hora:'21:00', iso:'2026-07-06T02:00:00Z'},
-  {id:93, phase:'octavos',       home:'W83',      hf:'', away:'W84',      af:'', dt:'06/07', hora:'16:00', iso:'2026-07-06T21:00:00Z'},
-  {id:94, phase:'octavos',       home:'W81',      hf:'', away:'W82',      af:'', dt:'06/07', hora:'21:00', iso:'2026-07-07T02:00:00Z'},
-  {id:95, phase:'octavos',       home:'W86',      hf:'', away:'W88',      af:'', dt:'07/07', hora:'13:00', iso:'2026-07-07T18:00:00Z'},
-  {id:96, phase:'octavos',       home:'W85',      hf:'', away:'W87',      af:'', dt:'07/07', hora:'17:00', iso:'2026-07-07T22:00:00Z'},
+  // Horarios verificados (ET-1=Ecuador). El admin asigna los equipos reales al clasificar
+  {id:89, phase:'octavos',       home:'W73',      hf:'', away:'W76',      af:'', dt:'04/07', hora:'12:00', iso:'2026-07-04T17:00:00Z'},
+  {id:90, phase:'octavos',       home:'W74',      hf:'', away:'W78',      af:'', dt:'04/07', hora:'16:00', iso:'2026-07-04T21:00:00Z'},
+  {id:91, phase:'octavos',       home:'W75',      hf:'', away:'W77',      af:'', dt:'05/07', hora:'15:00', iso:'2026-07-05T20:00:00Z'},
+  {id:92, phase:'octavos',       home:'W79',      hf:'', away:'W80',      af:'', dt:'05/07', hora:'19:00', iso:'2026-07-06T00:00:00Z'},
+  {id:93, phase:'octavos',       home:'W83',      hf:'', away:'W84',      af:'', dt:'06/07', hora:'14:00', iso:'2026-07-06T19:00:00Z'},
+  {id:94, phase:'octavos',       home:'W81',      hf:'', away:'W82',      af:'', dt:'06/07', hora:'19:00', iso:'2026-07-07T00:00:00Z'},
+  {id:95, phase:'octavos',       home:'W86',      hf:'', away:'W87',      af:'', dt:'07/07', hora:'11:00', iso:'2026-07-07T16:00:00Z'},
+  {id:96, phase:'octavos',       home:'W85',      hf:'', away:'W88',      af:'', dt:'07/07', hora:'15:00', iso:'2026-07-07T20:00:00Z'},
   // ── CUARTOS DE FINAL ────────────────────────────────────────
-  {id:97,  phase:'cuartos',      home:'W89',      hf:'', away:'W90',      af:'', dt:'09/07', hora:'17:00', iso:'2026-07-09T22:00:00Z'},
-  {id:98,  phase:'cuartos',      home:'W93',      hf:'', away:'W94',      af:'', dt:'10/07', hora:'16:00', iso:'2026-07-10T21:00:00Z'},
-  {id:99,  phase:'cuartos',      home:'W91',      hf:'', away:'W92',      af:'', dt:'11/07', hora:'18:00', iso:'2026-07-11T23:00:00Z'},
-  {id:100, phase:'cuartos',      home:'W95',      hf:'', away:'W96',      af:'', dt:'11/07', hora:'22:00', iso:'2026-07-12T03:00:00Z'},
+  {id:97,  phase:'cuartos',      home:'W89',      hf:'', away:'W90',      af:'', dt:'09/07', hora:'14:00', iso:'2026-07-09T19:00:00Z'},
+  {id:98,  phase:'cuartos',      home:'W93',      hf:'', away:'W94',      af:'', dt:'10/07', hora:'14:00', iso:'2026-07-10T19:00:00Z'},
+  {id:99,  phase:'cuartos',      home:'W91',      hf:'', away:'W92',      af:'', dt:'11/07', hora:'14:00', iso:'2026-07-11T19:00:00Z'},
+  {id:100, phase:'cuartos',      home:'W95',      hf:'', away:'W96',      af:'', dt:'11/07', hora:'18:00', iso:'2026-07-11T23:00:00Z'},
   // ── SEMIFINALES ─────────────────────────────────────────────
-  {id:101, phase:'semifinales',  home:'W97',      hf:'', away:'W98',      af:'', dt:'14/07', hora:'16:00', iso:'2026-07-14T21:00:00Z'},
-  {id:102, phase:'semifinales',  home:'W99',      hf:'', away:'W100',     af:'', dt:'15/07', hora:'16:00', iso:'2026-07-15T21:00:00Z'},
+  {id:101, phase:'semifinales',  home:'W97',      hf:'', away:'W98',      af:'', dt:'14/07', hora:'14:00', iso:'2026-07-14T19:00:00Z'},
+  {id:102, phase:'semifinales',  home:'W99',      hf:'', away:'W100',     af:'', dt:'15/07', hora:'14:00', iso:'2026-07-15T19:00:00Z'},
   // ── TERCER LUGAR ────────────────────────────────────────────
-  {id:103, phase:'tercero',      home:'L101',     hf:'', away:'L102',     af:'', dt:'18/07', hora:'15:00', iso:'2026-07-18T20:00:00Z'},
-  // ── GRAN FINAL ──────────────────────────────────────────────
-  {id:104, phase:'final',        home:'W101',     hf:'', away:'W102',     af:'', dt:'19/07', hora:'16:00', iso:'2026-07-19T21:00:00Z'},
+  {id:103, phase:'tercero',      home:'L101',     hf:'', away:'L102',     af:'', dt:'18/07', hora:'14:00', iso:'2026-07-18T19:00:00Z'},
+  // ── GRAN FINAL ── 3:00 PM ET confirmado oficialmente = 2:00 PM hora Ecuador
+  {id:104, phase:'final',        home:'W101',     hf:'', away:'W102',     af:'', dt:'19/07', hora:'14:00', iso:'2026-07-19T19:00:00Z'},
 ];
 KO_MATCHES_DEF.forEach(m => ALL_MATCHES.push(m));
 
@@ -685,34 +688,55 @@ function applyPhaseTeamsToMatches() {
   });
 }
 
-// Verifica si un partido KO permite predicción:
-// Abierto si el equipo está asignado Y faltan más de 30 min para el partido (hora Ecuador)
+// Convierte 'dt' de formato 'DD/MM HH:MM' (hora Ecuador, año 2026) a Date UTC
+// Hora Ecuador = UTC-5, así que sumamos 5 horas para obtener UTC
+function parseGroupMatchDate(dt) {
+  if(!dt) return null;
+  const parts = dt.match(/^(\d{2})\/(\d{2})\s+(\d{2}):(\d{2})$/);
+  if(!parts) return null;
+  const [,day,month,hour,min] = parts.map(Number);
+  // Crear fecha UTC: hora Ecuador + 5h = hora UTC
+  const utcHour = hour + 5;
+  const d = new Date(Date.UTC(2026, month-1, day, utcHour, min, 0));
+  return d;
+}
+
+// Obtiene el Date (UTC) de cualquier partido — sea de grupos (dt) o KO (iso)
+function getMatchDateTime(m) {
+  if(m.iso) return new Date(m.iso);
+  if(m.dt) return parseGroupMatchDate(m.dt);
+  return null;
+}
+
+// Verifica si un partido permite predicción:
+// Abierto si tiene equipos válidos Y faltan más de 30 min para el partido (hora Ecuador)
 function isMatchOpenForPred(mid) {
   const m = ALL_MATCHES.find(x => x.id === +mid);
   if(!m) return false;
-  // Fase de grupos usa deadline global
-  if(+mid <= 72) return new Date() < new Date(DB.deadline);
-  // Partido KO: necesita equipos asignados
-  const hasTeams = m.home && m.home.length > 2
-    && !m.home.match(/^[WL]\d/)
-    && !m.home.match(/^\d[A-L]/)
-    && !m.home.match(/^[A-Z]\d[A-Z]/);
-  if(!hasTeams) return false;
-  // Verificar 30 minutos antes del partido
-  if(m.iso) {
-    const matchTime = new Date(m.iso); // ISO en UTC
-    const now = new Date();
-    const diffMin = (matchTime - now) / 60000;
-    return diffMin > 30; // Permite predicción si faltan más de 30 min
+
+  // Para partidos KO: necesita equipos reales asignados (no placeholders)
+  if(+mid > 72) {
+    const hasTeams = m.home && m.home.length > 2
+      && !m.home.match(/^[WL]\d/)
+      && !m.home.match(/^\d[A-L]/)
+      && !m.home.match(/^[A-Z]\d[A-Z]/);
+    if(!hasTeams) return false;
   }
-  return false;
+
+  // Verificar 30 minutos antes del partido para TODOS los partidos (grupos y KO)
+  const matchTime = getMatchDateTime(m);
+  if(!matchTime) return false;
+  const now = new Date();
+  const diffMin = (matchTime - now) / 60000;
+  return diffMin > 30;
 }
 
 // Retorna texto del countdown para un partido
 function getMatchCountdown(mid) {
   const m = ALL_MATCHES.find(x => x.id === +mid);
-  if(!m || !m.iso) return '';
-  const matchTime = new Date(m.iso);
+  if(!m) return '';
+  const matchTime = getMatchDateTime(m);
+  if(!matchTime) return '';
   const now = new Date();
   const diffMin = Math.floor((matchTime - now) / 60000);
   if(diffMin < 0) return '⚽ En juego o finalizado';
@@ -986,6 +1010,8 @@ function vFixture(){
         rowCls=pts===3?'correct':pts===1?'winner-ok':'wrong';
       }
       const resH=res!=null?res.h:null, resA=res!=null?res.a:null;
+      const matchOpen = isMatchOpenForPred(m.id);
+      const countdown = getMatchCountdown(m.id);
 
       // Score center
       let scoreCenter='';
@@ -994,7 +1020,7 @@ function vFixture(){
         scoreCenter=`<div class="score-display">${resH} – ${resA}</div>`;
         if(pred!=null) scoreCenter+=`<div class="match-dt" style="color:var(--muted)">Pred: ${pred.h}–${pred.a}</div>`;
         if(pts!==null) scoreCenter+=`<div><span class="pts-badge pts-${pts}">+${pts} pts</span></div>`;
-      } else if(isUserView&&!closed){
+      } else if(isUserView&&matchOpen){
         // Input mode
         scoreCenter=`<div class="score-inputs">
           <input type="number" min="0" max="20" value="${pred&&pred.h!=null?pred.h:''}" placeholder="0"
@@ -1002,9 +1028,14 @@ function vFixture(){
           <span class="score-dash">–</span>
           <input type="number" min="0" max="20" value="${pred&&pred.a!=null?pred.a:''}" placeholder="0"
             onchange="setPred(${m.id},'a',this.value)" data-mid="${m.id}" data-side="a">
-        </div>`;
-      } else if(isUserView&&closed&&pred){
-        scoreCenter=`<div class="score-display score-pending">${pred.h} – ${pred.a}</div>`;
+        </div>
+        <div style="font-size:9px;color:var(--gold2);margin-top:2px">${countdown}</div>`;
+      } else if(isUserView&&!matchOpen&&pred){
+        scoreCenter=`<div class="score-display score-pending">${pred.h} – ${pred.a}</div>
+        <div style="font-size:9px;color:var(--muted)">${countdown}</div>`;
+      } else if(isUserView&&!matchOpen){
+        scoreCenter=`<div class="score-display score-pending">vs</div>
+        <div style="font-size:9px;color:var(--muted)">${countdown}</div>`;
       } else {
         scoreCenter=`<div class="score-display score-pending">vs</div>`;
       }
@@ -1058,8 +1089,7 @@ function vFixture(){
   }
 
   const infoBar=isUserView?
-    (closed?`<div class="alert alert-warn mb-2">⏰ Polla de grupos cerrada. Solo visualización.</div>`:
-            `<div class="alert alert-info mb-2">✏️ Ingresa tus pronósticos · Cierre: ${new Date(DB.deadline).toLocaleDateString('es-EC')} ${new Date(DB.deadline).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})}</div>`):'';
+    `<div class="alert alert-info mb-2">✏️ Cada partido cierra automáticamente <strong>30 minutos antes</strong> de su inicio (hora Ecuador). Puedes seguir prediciendo los partidos que aún no empiezan.</div>`:'';
 
   return `
   ${isUserView?`<div class="card" style="padding:12px 18px;margin-bottom:14px">
@@ -1146,8 +1176,9 @@ function vMiPolla(){
       let pts=null,cls='';
       if(res&&pred){pts=calcPts(pred.h,pred.a,res.h,res.a,m.id);cls=pts===3?'correct':pts===1?'winner-ok':'wrong';}
       let sc='';
+      const matchOpen=isMatchOpenForPred(m.id);
       if(res!=null) sc=`<div class="score-display" style="font-size:22px">${res.h} – ${res.a}</div>${pred?`<div style="font-size:10px;color:var(--muted)">Pred: ${pred.h}–${pred.a}</div>`:''}${pts!==null?`<span class="pts-badge pts-${pts}">+${pts} pts</span>`:''}`;
-      else if(!closed) sc=`<div class="score-inputs">
+      else if(matchOpen) sc=`<div class="score-inputs">
         <input type="number" min="0" max="20" value="${pred&&pred.h!=null?pred.h:''}" placeholder="0" onchange="setPred(${m.id},'h',this.value)" style="width:38px;height:32px;font-size:16px">
         <span class="score-dash">–</span>
         <input type="number" min="0" max="20" value="${pred&&pred.a!=null?pred.a:''}" placeholder="0" onchange="setPred(${m.id},'a',this.value)" style="width:38px;height:32px;font-size:16px">
@@ -1188,7 +1219,7 @@ function vMiPolla(){
       <div class="stat-pill">⏳ <b>${stats.pend}</b> pendientes</div>
     </div>
     <div class="progress-bar mt-2"><div class="progress-fill" style="width:${Math.round(done/total*100)}%"></div></div>
-    ${closed?`<div class="alert alert-warn mt-2">⏰ Polla cerrada el ${deadline.toLocaleDateString('es-EC')}.</div>`:`<div class="alert alert-info mt-2">✏️ Cierre: ${deadline.toLocaleDateString('es-EC')} ${deadline.toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})}</div>`}
+    <div class="alert alert-info mt-2">✏️ Cada partido cierra automáticamente 30 minutos antes de su inicio.</div>
   </div>
   ${groupsHtml}`;
 }
@@ -1410,8 +1441,11 @@ function doAdminLogin(){
   else alert('PIN incorrecto');
 }
 function setPred(mid,side,val){
-  const deadline=new Date(DB.deadline);
-  if(new Date()>deadline){alert('⏰ La polla ya cerró.');return;}
+  if(!isMatchOpenForPred(mid)){
+    alert('⏰ Este partido ya cerró sus predicciones (30 min antes del inicio).');
+    render();
+    return;
+  }
   if(!DB.predictions[loggedPid])DB.predictions[loggedPid]={};
   if(!DB.predictions[loggedPid][mid])DB.predictions[loggedPid][mid]={h:null,a:null};
   const n=parseInt(val);
