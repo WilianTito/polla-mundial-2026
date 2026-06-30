@@ -347,6 +347,7 @@ label.lbl { font-size: 11px; color: var(--muted); display: block; margin-bottom:
     </div>
     <div class="header-meta">
       <div class="badge-mundial">⚽ FIFA WORLD CUP 2026</div>
+      <div style="font-size:10px;color:rgba(245,197,24,0.5);letter-spacing:1px;text-align:right;margin-bottom:2px">v4.1 · 10/Jun/2026</div>
       <div id="syncStatus" class="sync-dot"><span class="spinner"></span> Cargando...</div>
     </div>
   </div>
@@ -374,7 +375,6 @@ label.lbl { font-size: 11px; color: var(--muted); display: block; margin-bottom:
 // ══════════════════════════════════════════════
 let SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwtpByDSMMJhQ0z4WBM5MCOxo84bDRh9sKjwDLparxWPhAvIbBQpxGek63QsUqzfP14/exec';
 let SCRIPT_READY = true;
-
 const PARTICIPANTS = [
   {id:'wilian',     name:'Wilian',     emoji:'👨‍💼', color:'#58a6ff', pass:'Mundial26W'},
   {id:'mariana',    name:'Mariana',    emoji:'👩',   color:'#f778ba', pass:'Mundial26M'},
@@ -855,18 +855,15 @@ function renderKOPhase(phaseKey, tabs, isUserView, pid) {
   const ptsObj = PHASE_PTS[phaseKey]||PHASE_PTS.grupos;
   const mids = PHASE_IDS[phaseKey]||[];
   const preds = (isUserView&&pid&&DB.predictions[pid])||{};
-  const phDeadline = DB.phaseDeadlines[phaseKey];
-  const dl = phDeadline ? new Date(phDeadline) : null;
   const now = new Date();
 
   let statusBanner = '';
   if(status==='pending_teams') {
-    statusBanner=`<div class="alert alert-warn">⚙️ El administrador aún no ha asignado los equipos clasificados para esta fase.</div>`;
+    statusBanner=`<div class="alert alert-warn">⚙️ El administrador aún no ha asignado los equipos clasificados para esta fase. Una vez asignados podrás ingresar tus pronósticos.</div>`;
   } else if(status==='open' && isUserView) {
-    const timeLeft = dl ? Math.max(0,Math.floor((dl-now)/3600000)) : 999;
-    statusBanner=`<div class="alert alert-info">✏️ <strong>Predicciones abiertas</strong> · Cierre: ${dl?dl.toLocaleDateString('es-EC')+' '+dl.toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'}):'pendiente'} ${timeLeft<24?'· ⚠️ '+timeLeft+'h restantes':''}</div>`;
+    statusBanner=`<div class="alert alert-info">✏️ <strong>Predicciones abiertas</strong> · Cada partido cierra automáticamente <strong>30 minutos antes</strong> de su inicio (hora Ecuador).</div>`;
   } else if(status==='closed' && isUserView) {
-    statusBanner=`<div class="alert alert-warn">🔒 Predicciones cerradas para esta fase.</div>`;
+    statusBanner=`<div class="alert alert-warn">🔒 Todos los partidos de esta fase han iniciado. No se aceptan más predicciones.</div>`;
   }
 
   let matchHtml = mids.map(mid => {
@@ -1345,14 +1342,14 @@ function vAdmin(){
           <div style="font-size:11px;margin-top:2px;color:${statusColor}">${statusLabel}</div>
         </div>
         <div style="text-align:right">
-          <div style="font-size:11px;color:var(--muted);margin-bottom:4px">Cierre predicciones</div>
-          <input type="datetime-local" class="field" style="font-size:11px;width:auto" value="${dl.slice?.(0,16)||''}"
-            onchange="savePhaseDeadline('${ph.key}',this.value)">
+          <div style="font-size:11px;color:var(--gold2)">🔒 Cierre automático</div>
+          <div style="font-size:10px;color:var(--muted)">30 min antes de cada partido</div>
+          <div style="font-size:10px;color:var(--muted)">Hora Ecuador (ECT)</div>
         </div>
       </div>
       <div style="padding:14px">
         <div style="font-size:11px;color:var(--muted);margin-bottom:10px;padding:8px;background:rgba(31,111,235,0.1);border-radius:6px;border:1px solid rgba(31,111,235,0.2)">
-          💡 <strong>Flujo:</strong> 1) Ingresa los equipos clasificados · 2) Define la fecha límite (12h antes del 1er partido) · 3) Los participantes llenan sus pronósticos · 4) Ingresa los resultados en la sección de grupos/partidos
+          💡 <strong>Flujo:</strong> 1) Ingresa los equipos clasificados en cada partido · 2) Los participantes pueden predecir automáticamente · 3) La predicción se cierra 30 min antes de cada partido · 4) Ingresa los resultados cuando terminen
         </div>
         ${matchRows}
       </div>
