@@ -347,7 +347,7 @@ label.lbl { font-size: 11px; color: var(--muted); display: block; margin-bottom:
     </div>
     <div class="header-meta">
       <div class="badge-mundial">⚽ FIFA WORLD CUP 2026</div>
-      <div style="font-size:10px;color:rgba(245,197,24,0.5);letter-spacing:1px;text-align:right;margin-bottom:2px">v5.2 · Orden cronológico + diagnóstico</div>
+      <div style="font-size:10px;color:rgba(245,197,24,0.5);letter-spacing:1px;text-align:right;margin-bottom:2px">v6.1 · Premios 10pts hasta Semis</div>
       <div id="syncStatus" class="sync-dot"><span class="spinner"></span> Cargando...</div>
     </div>
   </div>
@@ -573,7 +573,10 @@ let DB = {
   results:{},
   deadline:'2026-06-10T23:59:00',
   phaseDeadlines:{},   // { phaseKey: ISO datetime string }
-  phaseTeams:{}        // { matchId: {home:'TeamA', hf:'🇦🇷', away:'TeamB', af:'🇧🇷'} }
+  phaseTeams:{},       // { matchId: {home:'TeamA', hf:'🇦🇷', away:'TeamB', af:'🇧🇷'} }
+  awardPredictions:{}, // { pid: { mejorJugador:'Nombre', mejorArquero:'Nombre', goleador:'Nombre' } }
+  awardResults:{},     // { mejorJugador:'Nombre', mejorArquero:'Nombre', goleador:'Nombre' }
+  awardsDeadline:null  // ISO string — se cierra al iniciar Semifinales
 };
 let VIEW='fixture', selGroup='A', adminPhase='A', selKOPhase=null;
 let adminOk=false, loggedPid=null;
@@ -621,6 +624,16 @@ async function syncRead(){
     if(remoteData.phaseDeadlines && Object.keys(remoteData.phaseDeadlines).length > 0) {
       DB.phaseDeadlines = {...DB.phaseDeadlines, ...remoteData.phaseDeadlines};
     }
+    if(remoteData.awardPredictions) {
+      // Merge award predictions: local tiene prioridad
+      Object.entries(remoteData.awardPredictions).forEach(([pid, awards])=>{
+        if(!DB.awardPredictions[pid]) DB.awardPredictions[pid] = awards;
+        else DB.awardPredictions[pid] = {...awards, ...DB.awardPredictions[pid]};
+      });
+    }
+    if(remoteData.awardResults && Object.keys(remoteData.awardResults).length > 0) {
+      DB.awardResults = {...DB.awardResults, ...remoteData.awardResults};
+    }
     // Siempre aplicar equipos a ALL_MATCHES después de merge
     applyPhaseTeamsToMatches();
     saveLocal();
@@ -661,6 +674,8 @@ function loadLocal(){
       DB.deadline=d.deadline||DB.deadline;
       DB.phaseDeadlines=d.phaseDeadlines||{};
       DB.phaseTeams=d.phaseTeams||{};
+      DB.awardPredictions=d.awardPredictions||{};
+      DB.awardResults=d.awardResults||{};
       applyPhaseTeamsToMatches();
     }
   }catch(e){}
@@ -758,9 +773,9 @@ const PHASE_PTS = {
   dieciseisavos: {exact:4, winner:2},
   octavos:       {exact:5, winner:3},
   cuartos:       {exact:6, winner:4},
-  semifinales:   {exact:8, winner:5},
-  tercero:       {exact:6, winner:4},
-  final:         {exact:10,winner:6},
+  semifinales:   {exact:7, winner:5},
+  tercero:       {exact:7, winner:5},
+  final:         {exact:10,winner:8},
 };
 function getPhaseKey(mid) {
   mid=+mid;
@@ -805,6 +820,39 @@ function getPhaseStatus(phaseKey) {
   const anyOpen = mids.some(id => isMatchOpenForPred(id));
   return anyOpen ? 'open' : 'closed';
 }
+
+// Las predicciones de premios especiales cierran cuando inicia el primer
+// partido de Semifinales (mismo criterio: 30 min antes)
+function getAwardsStatus() {
+  const semisIds = [101,102];
+  const firstSemi = semisIds
+    .map(id => ALL_MATCHES.find(x=>x.id===id))
+    .filter(m => m)
+    .map(m => getMatchDateTime(m))
+    .filter(d => d)
+    .sort((a,b)=>a-b)[0];
+  if(!firstSemi) return 'open';
+  const now = new Date();
+  const diffMin = (firstSemi - now) / 60000;
+  return diffMin > 30 ? 'open' : 'closed';
+}
+
+const AWARD_POINTS = 10; // puntos por cada premio especial acertado
+
+function getAwardPoints(pid) {
+  const userAwards = DB.awardPredictions[pid] || {};
+  const realAwards = DB.awardResults || {};
+  let pts = 0, hits = 0;
+  ['mejorJugador','mejorArquero','goleador'].forEach(key=>{
+    if(userAwards[key] && realAwards[key] &&
+       userAwards[key].trim().toLowerCase() === realAwards[key].trim().toLowerCase()) {
+      pts += AWARD_POINTS;
+      hits++;
+    }
+  });
+  return {pts, hits};
+}
+
 function getStats(pid){
   let pts=0,ex=0,wn=0,wr=0,pend=0;
   const preds=DB.predictions[pid]||{};
@@ -821,7 +869,10 @@ function getStats(pid){
     else if(p===ptsObj.winner)wn++;
     else wr++;
   });
-  return {pts,ex,wn,wr,pend};
+  // Sumar puntos de premios especiales
+  const awardData = getAwardPoints(pid);
+  pts += awardData.pts;
+  return {pts,ex,wn,wr,pend,awardPts:awardData.pts,awardHits:awardData.hits};
 }
 function getLB(){
   return PARTICIPANTS.map(p=>({...p,...getStats(p.id)})).sort((a,b)=>b.pts-a.pts);
@@ -1222,16 +1273,75 @@ function vMiPolla(){
     </div>
     <div class="stat-row">
       <div class="stat-pill gold">🏆 <b>${stats.pts}</b> puntos</div>
-      <div class="stat-pill">✅ <b>${stats.ex}</b> exactos (3pts)</div>
-      <div class="stat-pill">🟡 <b>${stats.wn}</b> ganador (1pt)</div>
+      <div class="stat-pill">✅ <b>${stats.ex}</b> exactos</div>
+      <div class="stat-pill">🟡 <b>${stats.wn}</b> ganador</div>
       <div class="stat-pill">❌ <b>${stats.wr}</b> fallos</div>
       <div class="stat-pill">⏳ <b>${stats.pend}</b> pendientes</div>
+      <div class="stat-pill gold">🌟 <b>${stats.awardPts}</b> pts premios (${stats.awardHits}/3)</div>
     </div>
     <div class="progress-bar mt-2"><div class="progress-fill" style="width:${Math.round(done/total*100)}%"></div></div>
     <div class="alert alert-info mt-2">✏️ Cada partido cierra automáticamente 30 minutos antes de su inicio.</div>
   </div>
+  ${renderAwardsSection(loggedPid)}
   ${groupsHtml}`;
 }
+
+// ── PREMIOS ESPECIALES (Mejor Jugador, Mejor Arquero, Goleador) ──
+function renderAwardsSection(pid) {
+  const status = getAwardsStatus();
+  const userAwards = DB.awardPredictions[pid] || {};
+  const realAwards = DB.awardResults || {};
+
+  const AWARDS_LIST = [
+    {key:'mejorJugador', label:'⭐ Mejor Jugador del Torneo', icon:'⭐'},
+    {key:'mejorArquero', label:'🧤 Mejor Arquero del Torneo', icon:'🧤'},
+    {key:'goleador',     label:'⚽ Goleador del Torneo', icon:'⚽'},
+  ];
+
+  let bannerHtml = '';
+  if(status === 'open') {
+    bannerHtml = `<div class="alert alert-info">🌟 <strong>Premios Especiales</strong> · Puedes predecir hasta 30 min antes de iniciar Semifinales · Cada acierto = <strong>${AWARD_POINTS} puntos</strong></div>`;
+  } else {
+    bannerHtml = `<div class="alert alert-warn">🔒 Las predicciones de premios especiales están cerradas (inició Semifinales).</div>`;
+  }
+
+  let awardsHtml = AWARDS_LIST.map(a => {
+    const userPick = userAwards[a.key] || '';
+    const realPick = realAwards[a.key] || '';
+    const isCorrect = realPick && userPick && userPick.trim().toLowerCase() === realPick.trim().toLowerCase();
+    let rowCls = '';
+    if(realPick) rowCls = isCorrect ? 'correct' : (userPick ? 'wrong' : '');
+
+    return `<div class="match-row ${rowCls}" style="grid-template-columns:1fr;padding:12px 16px">
+      <div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;margin-bottom:6px">${a.label}</div>
+        ${status==='open' ? `
+          <input class="field" placeholder="Nombre del jugador" value="${userPick}"
+            onchange="setAwardPred('${a.key}',this.value)">
+        ` : `
+          <div style="font-size:14px;color:var(--text)">${userPick || '<span style="color:var(--muted)">Sin predicción</span>'}</div>
+        `}
+        ${realPick ? `<div style="margin-top:6px;font-size:12px;color:var(--muted)">Ganador real: <strong style="color:var(--gold)">${realPick}</strong> ${isCorrect?`<span class="pts-badge pts-3" style="margin-left:6px">+${AWARD_POINTS} pts</span>`:''}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  return `<div class="group-card" style="margin-bottom:16px">
+    <div class="group-card-header">
+      <div class="group-letter" style="font-size:28px;width:auto;padding-right:8px">🌟</div>
+      <div>
+        <div class="group-card-title">Premios Especiales</div>
+        <div class="text-muted" style="font-size:12px">+${AWARD_POINTS} pts por cada acierto</div>
+      </div>
+    </div>
+    <div style="padding:14px 0">
+      <div style="padding:0 16px 12px">${bannerHtml}</div>
+      ${awardsHtml}
+    </div>
+  </div>`;
+}
+
+
 
 // ══════════════════════════════════════════════
 // VIEW: LEADERBOARD
@@ -1246,10 +1356,22 @@ function vLeaderboard(){
     <div class="stat-row">
       <div class="stat-pill">⚽ Partidos: <b>${played}/${allM.length}</b></div>
       <div class="stat-pill">📅 Cierre polla: <b>${new Date(DB.deadline).toLocaleDateString('es-EC')}</b></div>
-      <div class="stat-pill gold">✅ Exacto=<b>3pts</b> · 🟡 Ganador=<b>1pt</b></div>
+      <div class="stat-pill gold">🌟 Premios = <b>${AWARD_POINTS}pts</b> c/u</div>
     </div>
     <div class="progress-bar mt-2" style="height:6px"><div class="progress-fill" style="width:${Math.round(played/allM.length*100)}%"></div></div>
     <div class="text-muted mt-2" style="font-size:11px">${Math.round(played/allM.length*100)}% del Mundial completado · 11 Jun – 19 Jul 2026</div>
+  </div>
+  <div class="card" style="padding:14px 18px">
+    <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:13px;letter-spacing:1px;color:var(--gold);margin-bottom:10px;text-transform:uppercase">📊 Puntos por Fase (Exacto / Ganador)</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px">
+      <div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--muted)">Grupos</div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">3 / 1</div></div>
+      <div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--muted)">Dieciseisavos</div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">4 / 2</div></div>
+      <div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--muted)">Octavos</div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">5 / 3</div></div>
+      <div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--muted)">Cuartos</div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">6 / 4</div></div>
+      <div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--muted)">Semis / 3er</div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">7 / 5</div></div>
+      <div style="background:linear-gradient(135deg,rgba(245,197,24,.15),var(--bg3));border:1px solid var(--gold);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--gold2)">🏆 Final</div><div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--gold)">10 / 8</div></div>
+    </div>
+    <div style="margin-top:10px;padding:8px;background:rgba(245,197,24,.08);border-radius:8px;font-size:11px;color:var(--gold2)">🌟 Premios Especiales (Mejor Jugador, Arquero, Goleador): <b>${AWARD_POINTS} pts</b> cada acierto · Cierran 30 min antes de Semifinales</div>
   </div>
   <div class="lb-grid">
   ${lb.map((p,i)=>`<div class="lb-card rank-${i+1}" onclick="loggedPid='${p.id}';goView('fixture')">
@@ -1257,12 +1379,13 @@ function vLeaderboard(){
     <div class="lb-emoji">${rnkEmoji[i]||''}</div>
     <div class="lb-info">
       <div class="lb-name" style="color:${p.color}">${p.emoji} ${p.name}</div>
-      <div class="lb-detail">✅ ${p.ex} exactos · 🟡 ${p.wn} ganador · ❌ ${p.wr} fallos · ⏳ ${p.pend} pend.</div>
+      <div class="lb-detail">✅ ${p.ex} exactos · 🟡 ${p.wn} ganador · ❌ ${p.wr} fallos · 🌟 ${p.awardHits}/3 premios (+${p.awardPts}pts)</div>
       <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(100,p.pts*1.5)}%"></div></div>
     </div>
     <div>
       <div class="lb-pts-big">${p.pts}</div>
       <div class="lb-pts-label">PUNTOS</div>
+
     </div>
   </div>`).join('')}
   </div>`;
@@ -1410,8 +1533,38 @@ function vAdmin(){
     <div class="card-title">🏆 Gestión Fases Eliminatorias</div>
     <div class="alert alert-info mb-2">Aquí asignas los equipos clasificados a cada llave y defines cuándo cierra la predicción de esa fase (recomendado: 12 horas antes del primer partido).</div>
     ${koHtml}
-  </div>`;
+  </div>` + renderAwardsAdmin();
 
+}
+
+function renderAwardsAdmin() {
+  const status = getAwardsStatus();
+  const statusLabel = status==='open' ? '✅ Abierto para predicciones' : '🔒 Cerrado (Semifinales ya inició)';
+  const statusColor = status==='open' ? 'var(--green)' : 'var(--red)';
+  const realAwards = DB.awardResults || {};
+
+  const AWARDS_LIST = [
+    {key:'mejorJugador', label:'⭐ Mejor Jugador del Torneo'},
+    {key:'mejorArquero', label:'🧤 Mejor Arquero del Torneo'},
+    {key:'goleador',     label:'⚽ Goleador del Torneo'},
+  ];
+
+  const rows = AWARDS_LIST.map(a => `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px">${a.label}</div>
+      <div class="flex gap-2">
+        <input class="field" id="award_${a.key}" placeholder="Nombre del ganador real" value="${realAwards[a.key]||''}" style="flex:1">
+        <button class="btn btn-gold btn-sm" onclick="saveAwardResult('${a.key}')">💾 Guardar</button>
+      </div>
+    </div>
+  `).join('');
+
+  return `<div class="card" style="margin-top:20px">
+    <div class="card-title">🌟 Premios Especiales</div>
+    <div style="font-size:11px;margin-bottom:10px;color:${statusColor}">${statusLabel}</div>
+    <div class="alert alert-info mb-2">Los participantes predicen estos 3 premios hasta 30 min antes de Semifinales. Ingresa aquí el ganador real de cada uno cuando se confirme (normalmente al final del torneo). Cada acierto otorga <strong>${AWARD_POINTS} puntos</strong>.</div>
+    ${rows}
+  </div>`;
 }
 
 // ══════════════════════════════════════════════
@@ -1475,6 +1628,20 @@ function setPred(mid,side,val){
     syncWrite({action:'savePred',pid:loggedPid,predictions:DB.predictions[loggedPid]});
   },1200);
 }
+function setAwardPred(key, val) {
+  if(getAwardsStatus() !== 'open') {
+    alert('⏰ Las predicciones de premios especiales ya cerraron (inició Semifinales).');
+    render();
+    return;
+  }
+  if(!DB.awardPredictions[loggedPid]) DB.awardPredictions[loggedPid] = {};
+  DB.awardPredictions[loggedPid][key] = val.trim();
+  saveLocal(); setSS('ing','↑ Guardando...');
+  clearTimeout(window._sa);
+  window._sa = setTimeout(()=>{
+    syncWrite({action:'saveAwardPred', pid:loggedPid, awards:DB.awardPredictions[loggedPid]});
+  }, 1200);
+}
 function doSaveRes(mid){
   const hEl=document.getElementById('ah_'+mid);
   const aEl=document.getElementById('aa_'+mid);
@@ -1509,6 +1676,16 @@ function doClearRes(mid){
 function doSaveConfig(){
   syncWrite({action:'saveConfig',deadline:DB.deadline});
   alert('✅ Configuración guardada');render();
+}
+function saveAwardResult(key) {
+  const val = document.getElementById('award_'+key)?.value?.trim();
+  if(!val) { alert('Ingresa un nombre'); return; }
+  if(!DB.awardResults) DB.awardResults = {};
+  DB.awardResults[key] = val;
+  saveLocal();
+  syncWrite({action:'saveAwardResult', key, value:val});
+  alert('✅ Guardado: '+val);
+  render();
 }
 async function showDiagnostic(){
   const panel=document.getElementById('diagPanel');
