@@ -347,7 +347,7 @@ label.lbl { font-size: 11px; color: var(--muted); display: block; margin-bottom:
     </div>
     <div class="header-meta">
       <div class="badge-mundial">⚽ FIFA WORLD CUP 2026</div>
-      <div style="font-size:10px;color:rgba(245,197,24,0.5);letter-spacing:1px;text-align:right;margin-bottom:2px">v5.1 · Horarios verificados</div>
+      <div style="font-size:10px;color:rgba(245,197,24,0.5);letter-spacing:1px;text-align:right;margin-bottom:2px">v5.2 · Orden cronológico + diagnóstico</div>
       <div id="syncStatus" class="sync-dot"><span class="spinner"></span> Cargando...</div>
     </div>
   </div>
@@ -877,7 +877,16 @@ function renderKOPhase(phaseKey, tabs, isUserView, pid) {
   const PHASE_IDS = {dieciseisavos:[73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88],octavos:[89,90,91,92,93,94,95,96],cuartos:[97,98,99,100],semifinales:[101,102],tercero:[103],final:[104]};
   const status = getPhaseStatus(phaseKey);
   const ptsObj = PHASE_PTS[phaseKey]||PHASE_PTS.grupos;
-  const mids = PHASE_IDS[phaseKey]||[];
+  let mids = PHASE_IDS[phaseKey]||[];
+  // Ordenar cronológicamente por fecha/hora real del partido (no por número de ID)
+  mids = [...mids].sort((a,b) => {
+    const ma = ALL_MATCHES.find(x=>x.id===a);
+    const mb = ALL_MATCHES.find(x=>x.id===b);
+    const ta = ma ? getMatchDateTime(ma) : null;
+    const tb = mb ? getMatchDateTime(mb) : null;
+    if(!ta || !tb) return a-b;
+    return ta - tb;
+  });
   const preds = (isUserView&&pid&&DB.predictions[pid])||{};
   const now = new Date();
 
@@ -1313,7 +1322,9 @@ function vAdmin(){
     <div class="flex gap-2">
       <button class="btn btn-gold btn-sm" onclick="doSaveConfig()">💾 Guardar config</button>
       <button class="btn btn-ghost btn-sm" onclick="syncRead().then(render)">🔄 Sincronizar</button>
+      <button class="btn btn-ghost btn-sm" onclick="showDiagnostic()">🔍 Diagnóstico</button>
     </div>
+    <div id="diagPanel" style="display:none;margin-top:12px;padding:10px;background:#000;border-radius:8px;font-family:monospace;font-size:10px;color:#0f0;max-height:200px;overflow:auto"></div>
   </div>
   <div class="group-card">
     <div class="group-card-header"><div class="group-letter">${adminPhase}</div>
@@ -1339,7 +1350,15 @@ function vAdmin(){
     const statusLabel = status==='pending_teams'?'⚙️ Pendiente asignar equipos': status==='open'?'✅ Abierta para predicciones':'🔒 Cerrada';
     const statusColor = status==='pending_teams'?'var(--muted)': status==='open'?'var(--green)':'var(--red)';
 
-    let matchRows = ph.ids.map(mid => {
+    let sortedIds = [...ph.ids].sort((a,b) => {
+      const ma = ALL_MATCHES.find(x=>x.id===a);
+      const mb = ALL_MATCHES.find(x=>x.id===b);
+      const ta = ma ? getMatchDateTime(ma) : null;
+      const tb = mb ? getMatchDateTime(mb) : null;
+      if(!ta || !tb) return a-b;
+      return ta - tb;
+    });
+    let matchRows = sortedIds.map(mid => {
       const m = ALL_MATCHES.find(x=>x.id===mid);
       const res = DB.results[mid];
       const teams = DB.phaseTeams[mid] || {};
@@ -1490,6 +1509,50 @@ function doClearRes(mid){
 function doSaveConfig(){
   syncWrite({action:'saveConfig',deadline:DB.deadline});
   alert('✅ Configuración guardada');render();
+}
+async function showDiagnostic(){
+  const panel=document.getElementById('diagPanel');
+  if(!panel) return;
+  panel.style.display='block';
+  panel.innerHTML='Consultando servidor...';
+  let serverData = {};
+  try{
+    const r=await fetch(SCRIPT_URL+'?action=read&t='+Date.now());
+    serverData = await r.json();
+  }catch(e){
+    panel.innerHTML='❌ ERROR al conectar con Apps Script: '+e.message;
+    return;
+  }
+  const localTeams = DB.phaseTeams;
+  const serverTeams = serverData.phaseTeams || {};
+  let html = '=== DIAGNÓSTICO DE SINCRONIZACIÓN ===\n\n';
+  html += 'SCRIPT_URL configurado: '+(SCRIPT_READY?'SÍ':'NO ⚠️')+'\n';
+  html += 'URL: '+SCRIPT_URL.substring(0,60)+'...\n\n';
+  html += '--- EQUIPOS EN ESTE NAVEGADOR (local) ---\n';
+  html += Object.keys(localTeams).length+' equipos guardados localmente\n';
+  Object.entries(localTeams).forEach(([mid,t])=>{
+    html += `  #${mid}: ${t.home} vs ${t.away}\n`;
+  });
+  html += '\n--- EQUIPOS EN EL SERVIDOR (Google Sheets) ---\n';
+  html += Object.keys(serverTeams).length+' equipos guardados en el servidor\n';
+  Object.entries(serverTeams).forEach(([mid,t])=>{
+    html += `  #${mid}: ${t.home} vs ${t.away}\n`;
+  });
+  html += '\n--- DIAGNÓSTICO ---\n';
+  if(Object.keys(localTeams).length > 0 && Object.keys(serverTeams).length === 0){
+    html += '⚠️ PROBLEMA DETECTADO: Tienes equipos guardados en ESTE navegador\n';
+    html += 'pero el servidor (Google Sheets) está VACÍO.\n\n';
+    html += 'Esto significa que tu Apps Script no tiene actualizada\n';
+    html += 'la función "savePhaseTeams". Debes actualizar el código\n';
+    html += 'del Apps Script con la versión que incluye ese manejo.\n';
+  } else if(Object.keys(serverTeams).length > 0){
+    html += '✅ El servidor SÍ tiene equipos guardados.\n';
+    html += 'Si en otro dispositivo no los ves, prueba "🔄 Sincronizar"\n';
+    html += 'o recarga la página completamente (Ctrl+Shift+R).\n';
+  } else {
+    html += 'ℹ️ No hay equipos guardados ni local ni en el servidor.\n';
+  }
+  panel.innerHTML = '<pre style="white-space:pre-wrap;margin:0">'+html+'</pre>';
 }
 function printPolla(pid){
   const p=PARTICIPANTS.find(x=>x.id===pid);
